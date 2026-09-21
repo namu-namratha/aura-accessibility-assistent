@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="AURA - Voice Controlled Smart Assistant for Accessibility"
+    >
+
+    <title>AURA | Accessibility Voice Assistant</title>
+
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+</head>
+
+<body>
+
+    <!-- =========================
+         ACCESSIBILITY SKIP LINK
+    ========================== -->
+
+    <a
+        href="#main-content"
+        class="skip-link"
+    >
+        Skip to main content
+    </a>
+
+
+    <!-- =========================
+         HEADER
+    ========================== -->
+
+    <header class="header">
+
+        <div class="logo-container">
+
+            <div class="logo-icon">
+                A
+            </div>
+
+            <div class="logo-text">
+                <h1>AURA</h1>
+                <span>Accessible Voice Assistant</span>
+            </div>
+
+        </div>
+
+
+        <nav
+            class="main-navigation"
+            aria-label="Main navigation"
+        >
+
+            <a
+                href="#home"
+                class="nav-link active"
+            >
+                Home
+            </a>
+
+            <a
+                href="#commands"
+                class="nav-link"
+            >
+                Commands
+            </a>
+
+            <a
+                href="#how-it-works"
+                class="nav-link"
+            >
+                How It Works
+            </a>
+
+            <a
+                href="pages/login.html"
+                class="login-button"
+            >
+                Sign In
+            </a>
+
+        </nav>
+
+    </header>
+
+
+    <!-- =========================
+         MAIN CONTENT
+    ========================== -->
+
+    <main id="main-content">
+
+
+        <!-- =========================
+             HERO SECTION
+        ========================== -->
+
+        <section
+            id="home"
+            class="hero-section"
+        >
+
+            <div class="hero-content">
+
+                <div class="status-badge">
+                    <span class="status-dot"></span>
+                    Voice Assistant Ready
+                </div>
+
+
+                <h2>
+                    Your voice.
+                    <br>
+                    <span>Our interface.</span>
+                </h2>
+
+
+                <p class="hero-description">
+
+                    Navigate, search, read content and interact
+                    with websites using your voice.
+
+                    A simpler digital experience designed
+                    for everyone.
+
+                </p>
+
+
+                <div class="hero-actions">
+
+                    <button
+                        class="primary-button"
+                        id="startAssistantButton"
+                    >
+
+                        <span class="button-icon">🎙</span>
+
+                        Start Voice Assistant
+
+                    </button>
+
+
+                    <button
+                        class="secondary-button"
+                        id="learnMoreButton"
+                    >
+
+                        Learn how it works
+
+                        <span>↓</span>
+
+                    </button>
+
+                </div>
+
+
+                <div class="feature-mini-list">
+
+                    <div class="mini-feature">
+                        <span>✓</span>
+                        Voice Navigation
+                    </div>
+
+                    <div class="mini-feature">
+                        <span>✓</span>
+                        Text to Speech
+                    </div>
+
+                    <div class="mini-feature">
+                        <span>✓</span>
+                        Voice Forms
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================
+                 VOICE ASSISTANT CARD
+            ========================== -->
+
+            <div class="assistant-wrapper">
+
+                <div class="assistant-card">
+
+                    <div class="assistant-header">
+
+                        <div>
+                            <span class="small-label">
+                                AURA ASSISTANT
+                            </span>
+
+                            <h3 id="assistantStatus">
+                                Ready to listen
+                            </h3>
+                        </div>
+
+
+                        <div class="online-indicator">
+
+                            <span></span>
+
+                            Online
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Voice visualization -->
+
+                    <div
+                        class="voice-visualizer"
+                        id="voiceVisualizer"
+                    >
+
+                        <div class="visualizer-circle">
+
+                            <div class="pulse-ring"></div>
+
+                            <div class="microphone-icon">
+                                🎙
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Main voice button -->
+
+                    <button
+                        id="voiceButton"
+                        class="voice-button"
+                        aria-label="Start voice recognition"
+                    >
+
+                        <span class="mic-symbol">
+                            🎙
+                        </span>
+
+                    </button>
+
+
+                    <p
+                        class="voice-instruction"
+                        id="voiceInstruction"
+                    >
+                        Click the microphone and start speaking
+                    </p>
+
+
+                    <!-- Transcript -->
+
+                    <div class="transcript-container">
+
+                        <div class="transcript-header">
+
+                            <span>
+                                You said
+                            </span>
+
+                            <button
+                                id="clearTranscript"
+                                class="text-button"
+                            >
+                                Clear
+                            </button>
+
+                        </div>
+
+
+                        <div
+                            class="transcript"
+                            id="transcript"
+                        >
+
+                            <span class="placeholder-text">
+                                Your voice command will appear here...
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Assistant response -->
+
+                    <div class="response-container">
+
+                        <div class="response-icon">
+                            A
+                        </div>
+
+                        <div>
+
+                            <span class="response-label">
+                                AURA
+                            </span>
+
+                            <p id="assistantResponse">
+                                Hello! I'm ready to assist you.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- TTS controls -->
+
+                    <div class="assistant-controls">
+
+                        <button
+                            id="speakResponse"
+                            class="control-button"
+                        >
+                            🔊 Speak Response
+                        </button>
+
+                        <button
+                            id="stopSpeech"
+                            class="control-button"
+                        >
+                            ■ Stop
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             COMMANDS SECTION
+        ========================== -->
+
+        <section
+            id="commands"
+            class="commands-section"
+        >
+
+            <div class="section-heading">
+
+                <span class="section-label">
+                    VOICE COMMANDS
+                </span>
+
+                <h2>
+                    Speak naturally.
+                    <br>
+                    <span>AURA understands.</span>
+                </h2>
+
+                <p>
+                    Try simple voice commands to interact
+                    with the assistant.
+                </p>
+
+            </div>
+
+
+            <div class="command-grid">
+
+
+                <button
+                    class="command-card"
+                    data-command="Go to home"
+                >
+
+                    <div class="command-icon">
+                        🏠
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Navigation
+                        </h3>
+
+                        <p>
+                            "Go to home"
+                        </p>
+
+                    </div>
+
+                </button>
+
+
+                <button
+                    class="command-card"
+                    data-command="Search for accessibility"
+                >
+
+                    <div class="command-icon">
+                        🔎
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Search
+                        </h3>
+
+                        <p>
+                            "Search for accessibility"
+                        </p>
+
+                    </div>
+
+                </button>
+
+
+                <button
+                    class="command-card"
+                    data-command="Read this page"
+                >
+
+                    <div class="command-icon">
+                        🔊
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Read Page
+                        </h3>
+
+                        <p>
+                            "Read this page"
+                        </p>
+
+                    </div>
+
+                </button>
+
+
+                <button
+                    class="command-card"
+                    data-command="Open registration form"
+                >
+
+                    <div class="command-icon">
+                        📝
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Forms
+                        </h3>
+
+                        <p>
+                            "Open registration form"
+                        </p>
+
+                    </div>
+
+                </button>
+
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             HOW IT WORKS
+        ========================== -->
+
+        <section
+            id="how-it-works"
+            class="process-section"
+        >
+
+            <div class="section-heading center">
+
+                <span class="section-label">
+                    HOW IT WORKS
+                </span>
+
+                <h2>
+                    One voice.
+                    <br>
+                    <span>Six intelligent steps.</span>
+                </h2>
+
+            </div>
+
+
+            <div class="process-flow">
+
+
+                <div class="process-step">
+
+                    <div class="step-number">
+                        01
+                    </div>
+
+                    <div class="step-icon">
+                        🎙
+                    </div>
+
+                    <h3>
+                        Speak
+                    </h3>
+
+                    <p>
+                        Give AURA a natural voice command.
+                    </p>
+
+                </div>
+
+
+                <div class="process-arrow">
+                    →
+                </div>
+
+
+                <div class="process-step">
+
+                    <div class="step-number">
+                        02
+                    </div>
+
+                    <div class="step-icon">
+                        📝
+                    </div>
+
+                    <h3>
+                        Convert
+                    </h3>
+
+                    <p>
+                        Speech is converted into text.
+                    </p>
+
+                </div>
+
+
+                <div class="process-arrow">
+                    →
+                </div>
+
+
+                <div class="process-step">
+
+                    <div class="step-number">
+                        03
+                    </div>
+
+                    <div class="step-icon">
+                        🧠
+                    </div>
+
+                    <h3>
+                        Understand
+                    </h3>
+
+                    <p>
+                        AURA identifies the user's intent.
+                    </p>
+
+                </div>
+
+
+                <div class="process-arrow">
+                    →
+                </div>
+
+
+                <div class="process-step">
+
+                    <div class="step-number">
+                        04
+                    </div>
+
+                    <div class="step-icon">
+                        ⚡
+                    </div>
+
+                    <h3>
+                        Act
+                    </h3>
+
+                    <p>
+                        The requested action is performed.
+                    </p>
+
+                </div>
+
+
+                <div class="process-arrow">
+                    →
+                </div>
+
+
+                <div class="process-step">
+
+                    <div class="step-number">
+                        05
+                    </div>
+
+                    <div class="step-icon">
+                        🔊
+                    </div>
+
+                    <h3>
+                        Respond
+                    </h3>
+
+                    <p>
+                        AURA provides spoken feedback.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             ACCESSIBILITY SECTION
+        ========================== -->
+
+        <section class="accessibility-section">
+
+            <div class="accessibility-content">
+
+                <span class="section-label">
+                    BUILT FOR ACCESSIBILITY
+                </span>
+
+                <h2>
+                    Technology should
+                    <span>remove barriers.</span>
+                </h2>
+
+                <p>
+                    AURA is designed to reduce dependence
+                    on traditional mouse and keyboard interaction
+                    and provide a more accessible way to interact
+                    with web interfaces.
+                </p>
+
+
+                <div class="accessibility-features">
+
+                    <div>
+                        <strong>01</strong>
+                        Voice-first interaction
+                    </div>
+
+                    <div>
+                        <strong>02</strong>
+                        Audio feedback
+                    </div>
+
+                    <div>
+                        <strong>03</strong>
+                        Keyboard accessible
+                    </div>
+
+                    <div>
+                        <strong>04</strong>
+                        Clear interface
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =========================
+         FOOTER
+    ========================== -->
+
+    <footer class="footer">
+
+        <div class="footer-brand">
+
+            <div class="logo-icon">
+                A
+            </div>
+
+            <div>
+
+                <strong>AURA</strong>
+
+                <span>
+                    Accessibility Voice Assistant
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <p>
+            Designed to make digital interaction more accessible.
+        </p>
+
+
+        <p class="copyright">
+            © 2026 AURA Accessibility Assistant
+        </p>
+
+    </footer>
+
+
+    <!-- =========================
+         JAVASCRIPT
+    ========================== -->
+
+    <script src="js/app.js"></script>
+
+</body>
+</html>
