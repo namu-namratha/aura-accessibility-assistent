@@ -30,7 +30,7 @@ app.innerHTML = `
                 </a>
 
 
-                <a href="#assistant">
+                <a href="/pages/assistant.html">
                     <span>◉</span>
                     Voice Assistant
                 </a>
@@ -42,7 +42,7 @@ app.innerHTML = `
                 </a>
 
 
-                <a href="#activity">
+                <a href="/pages/dashboard.html#activity">
                     <span>◷</span>
                     Activity
                 </a>
@@ -176,7 +176,8 @@ app.innerHTML = `
                         </h2>
 
                         <p>
-                            Activate AURA and speak naturally.
+                            Speak naturally with AURA
+                            using the full assistant interface.
                         </p>
 
 
@@ -186,7 +187,7 @@ app.innerHTML = `
                                 id="activateAssistant"
                                 class="assistant-primary-button"
                             >
-                                🎙 Activate AURA
+                                🎙 Open AURA Assistant
                             </button>
 
 
@@ -204,7 +205,7 @@ app.innerHTML = `
                             class="assistant-status"
                             id="assistantStatus"
                         >
-                            Ready for your command
+                            AURA is ready
                         </div>
 
                     </div>
@@ -235,6 +236,8 @@ app.innerHTML = `
                     <div class="dashboard-action-grid">
 
 
+                        <!-- ACCESSIBILITY -->
+
                         <button
                             class="dashboard-action-card"
                             id="actionAccessibility"
@@ -252,10 +255,14 @@ app.innerHTML = `
                                 Customize your AURA experience.
                             </span>
 
-                            <b>→</b>
+                            <b>
+                                →
+                            </b>
 
                         </button>
 
+
+                        <!-- SETTINGS -->
 
                         <button
                             class="dashboard-action-card"
@@ -274,10 +281,14 @@ app.innerHTML = `
                                 Manage your preferences.
                             </span>
 
-                            <b>→</b>
+                            <b>
+                                →
+                            </b>
 
                         </button>
 
+
+                        <!-- VOICE ASSISTANT -->
 
                         <button
                             class="dashboard-action-card"
@@ -289,14 +300,16 @@ app.innerHTML = `
                             </div>
 
                             <strong>
-                                Voice command
+                                Voice Assistant
                             </strong>
 
                             <span>
-                                Try speaking to AURA.
+                                Open the complete AURA assistant.
                             </span>
 
-                            <b>→</b>
+                            <b>
+                                →
+                            </b>
 
                         </button>
 
@@ -330,6 +343,9 @@ app.innerHTML = `
 
                     <div class="activity-list">
 
+
+                        <!-- ACTIVITY 1 -->
+
                         <div class="activity-item">
 
                             <div class="activity-icon">
@@ -354,6 +370,8 @@ app.innerHTML = `
 
                         </div>
 
+
+                        <!-- ACTIVITY 2 -->
 
                         <div class="activity-item">
 
@@ -380,6 +398,8 @@ app.innerHTML = `
                         </div>
 
 
+                        <!-- ACTIVITY 3 -->
+
                         <div class="activity-item">
 
                             <div class="activity-icon">
@@ -404,9 +424,38 @@ app.innerHTML = `
 
                         </div>
 
+
+                        <!-- ACTIVITY 4 -->
+
+                        <div class="activity-item">
+
+                            <div class="activity-icon">
+                                ◉
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Voice Assistant
+                                </strong>
+
+                                <span>
+                                    AURA assistant interface is ready.
+                                </span>
+
+                            </div>
+
+                            <time>
+                                Ready
+                            </time>
+
+                        </div>
+
+
                     </div>
 
                 </section>
+
 
             </section>
 
@@ -425,6 +474,24 @@ const dashboardTime =
 
 const assistantStatus =
     document.querySelector('#assistantStatus')
+
+const activateAssistant =
+    document.querySelector('#activateAssistant')
+
+const readDashboard =
+    document.querySelector('#readDashboard')
+
+const actionAccessibility =
+    document.querySelector('#actionAccessibility')
+
+const actionSettings =
+    document.querySelector('#actionSettings')
+
+const actionVoice =
+    document.querySelector('#actionVoice')
+
+const dashboardLogout =
+    document.querySelector('#dashboardLogout')
 
 
 /* =========================================
@@ -445,7 +512,9 @@ function updateTime() {
         )
 }
 
+
 updateTime()
+
 
 setInterval(
     updateTime,
@@ -454,196 +523,130 @@ setInterval(
 
 
 /* =========================================
-   NAVIGATION
+   OPEN AURA ASSISTANT
    ========================================= */
 
-document
-    .querySelector('#actionAccessibility')
-    .addEventListener(
-        'click',
-        () => {
-            window.location.href =
-                '/pages/accessibility.html'
-        }
-    )
+function openAssistant() {
+
+    assistantStatus.textContent =
+        'Opening AURA Assistant...'
 
 
-document
-    .querySelector('#actionSettings')
-    .addEventListener(
-        'click',
+    setTimeout(
         () => {
+
             window.location.href =
-                '/pages/settings.html'
-        }
+                '/pages/assistant.html'
+
+        },
+        250
     )
+}
+
+
+activateAssistant.addEventListener(
+    'click',
+    openAssistant
+)
+
+
+actionVoice.addEventListener(
+    'click',
+    openAssistant
+)
 
 
 /* =========================================
-   VOICE ASSISTANT
+   ACCESSIBILITY
    ========================================= */
 
-document
-    .querySelector('#activateAssistant')
-    .addEventListener(
-        'click',
-        () => {
+actionAccessibility.addEventListener(
+    'click',
+    () => {
 
-            assistantStatus.textContent =
-                'Listening... Speak your command.'
+        window.location.href =
+            '/pages/accessibility.html'
 
-            assistantStatus.classList.add(
-                'assistant-listening'
-            )
+    }
+)
 
 
-            if (
-                'webkitSpeechRecognition'
-                in window
-            ) {
+/* =========================================
+   SETTINGS
+   ========================================= */
 
-                const Recognition =
-                    window.webkitSpeechRecognition
+actionSettings.addEventListener(
+    'click',
+    () => {
 
-                const recognition =
-                    new Recognition()
+        window.location.href =
+            '/pages/settings.html'
 
-                recognition.lang =
-                    'en-IN'
-
-                recognition.interimResults =
-                    false
-
-                recognition.start()
-
-
-                recognition.onresult =
-                    (event) => {
-
-                        const command =
-                            event.results[0][0].transcript
-
-                        assistantStatus.textContent =
-                            `Heard: "${command}"`
-
-                        assistantStatus.classList.remove(
-                            'assistant-listening'
-                        )
-                    }
-
-
-                recognition.onerror =
-                    () => {
-
-                        assistantStatus.textContent =
-                            'Unable to hear the command.'
-
-                        assistantStatus.classList.remove(
-                            'assistant-listening'
-                        )
-
-                    }
-
-            } else {
-
-                assistantStatus.textContent =
-                    'Voice recognition is not supported in this browser.'
-
-                assistantStatus.classList.remove(
-                    'assistant-listening'
-                )
-
-            }
-
-        }
-    )
+    }
+)
 
 
 /* =========================================
    READ DASHBOARD
    ========================================= */
 
-document
-    .querySelector('#readDashboard')
-    .addEventListener(
-        'click',
-        () => {
+readDashboard.addEventListener(
+    'click',
+    () => {
 
-            if (
-                !('speechSynthesis' in window)
-            ) {
+        if (
+            !('speechSynthesis' in window)
+        ) {
 
-                alert(
-                    'Text-to-speech is not supported by this browser.'
-                )
-
-                return
-
-            }
-
-
-            window.speechSynthesis.cancel()
-
-
-            const text =
-                document.querySelector(
-                    '.dashboard-content'
-                ).innerText
-
-
-            const speech =
-                new SpeechSynthesisUtterance(
-                    text
-                )
-
-
-            speech.rate = 0.9
-
-            speech.pitch = 1
-
-            speech.volume = 1
-
-
-            window.speechSynthesis.speak(
-                speech
+            alert(
+                'Text-to-speech is not supported by this browser.'
             )
 
-        }
-    )
-
-
-/* =========================================
-   QUICK VOICE ACTION
-   ========================================= */
-
-document
-    .querySelector('#actionVoice')
-    .addEventListener(
-        'click',
-        () => {
-
-            document
-                .querySelector(
-                    '#activateAssistant'
-                )
-                .click()
+            return
 
         }
-    )
+
+
+        window.speechSynthesis.cancel()
+
+
+        const text =
+            document.querySelector(
+                '.dashboard-content'
+            ).innerText
+
+
+        const speech =
+            new SpeechSynthesisUtterance(
+                text
+            )
+
+
+        speech.rate = 0.9
+
+        speech.pitch = 1
+
+        speech.volume = 1
+
+
+        window.speechSynthesis.speak(
+            speech
+        )
+
+    }
+)
 
 
 /* =========================================
    LOGOUT
    ========================================= */
 
-document
-    .querySelector('#dashboardLogout')
-    .addEventListener(
-        'click',
-        () => {
+dashboardLogout.addEventListener(
+    'click',
+    () => {
 
-            window.location.href =
-                '/pages/login.html'
+        window.location.href =
+            '/pages/login.html'
 
-        }
-    )
+    }
+)
