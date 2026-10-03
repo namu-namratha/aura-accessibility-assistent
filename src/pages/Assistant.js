@@ -1,12 +1,21 @@
 import '../style.css'
 
+
+/* =========================================
+   AURA VOICE ASSISTANT
+   ========================================= */
+
 const app = document.querySelector('#assistant-app')
 
+
 app.innerHTML = `
+
     <div class="assistant-page">
 
-        <!-- SIDEBAR -->
-        <aside class="assistant-sidebar">
+
+        <!-- HEADER -->
+
+        <header class="assistant-header">
 
             <div class="assistant-brand">
 
@@ -14,15 +23,16 @@ app.innerHTML = `
                     A
                 </div>
 
-                <span>AURA</span>
+                <span>
+                    AURA
+                </span>
 
             </div>
 
 
-            <nav class="assistant-nav">
+            <nav class="assistant-navigation">
 
                 <a href="/pages/dashboard.html">
-                    <span>⌂</span>
                     Dashboard
                 </a>
 
@@ -30,495 +40,302 @@ app.innerHTML = `
                     href="/pages/assistant.html"
                     class="active"
                 >
-                    <span>◉</span>
                     Voice Assistant
                 </a>
 
                 <a href="/pages/accessibility.html">
-                    <span>♿</span>
                     Accessibility
                 </a>
 
-                <a href="/pages/dashboard.html#activity">
-                    <span>◷</span>
-                    Activity
-                </a>
-
                 <a href="/pages/settings.html">
-                    <span>⚙</span>
                     Settings
                 </a>
 
             </nav>
 
 
-            <div class="assistant-sidebar-bottom">
+            <div class="assistant-online">
 
-                <button id="assistantLogout">
-                    <span>↪</span>
-                    Log out
-                </button>
+                <span class="assistant-online-dot"></span>
+
+                Online
 
             </div>
 
-        </aside>
+        </header>
+
 
 
         <!-- MAIN -->
+
         <main class="assistant-main">
 
 
-            <!-- TOPBAR -->
-            <header class="assistant-topbar">
+            <!-- TITLE -->
 
-                <div class="assistant-mobile-brand">
+            <section class="assistant-intro">
 
-                    <div class="assistant-brand-icon">
-                        A
-                    </div>
+                <span class="dashboard-label">
+                    AURA INTELLIGENT ASSISTANT
+                </span>
 
-                    <span>AURA</span>
+                <h1>
+                    How can I help?
+                </h1>
 
-                </div>
+                <p>
+                    Speak naturally and let AURA
+                    control your experience.
+                </p>
 
-
-                <div class="assistant-page-title">
-
-                    <span>
-                        INTELLIGENT ASSISTANT
-                    </span>
-
-                    <h1>
-                        AURA
-                    </h1>
-
-                </div>
+            </section>
 
 
-                <div class="assistant-online">
 
-                    <span></span>
+            <!-- ASSISTANT CARD -->
 
-                    Online
-
-                </div>
-
-            </header>
-
-
-            <!-- ASSISTANT CONTENT -->
-            <section class="assistant-workspace">
+            <section class="assistant-main-card">
 
 
                 <!-- ORB -->
-                <div class="assistant-orb-large">
 
-                    <div class="assistant-orb-ring ring-one"></div>
+                <div
+                    class="assistant-large-orb"
+                    id="assistantOrb"
+                >
 
-                    <div class="assistant-orb-ring ring-two"></div>
-
-                    <div class="assistant-orb-core">
+                    <div class="assistant-large-orb-inner">
                         A
                     </div>
 
                 </div>
 
 
-                <span class="assistant-eyebrow">
-                    AURA INTELLIGENCE
-                </span>
 
-
-                <h2 class="assistant-heading">
-                    How can I help you?
-                </h2>
-
-
-                <p class="assistant-description">
-                    Speak naturally or type a command below.
-                    AURA is ready.
-                </p>
-
-
-                <!-- RESPONSE -->
-                <div
-                    class="assistant-response"
-                    id="assistantResponse"
-                >
-                    <span class="response-label">
-                        AURA
-                    </span>
-
-                    <p id="responseText">
-                        Hello. I'm ready for your command.
-                    </p>
-                </div>
-
-
-                <!-- INPUT -->
-                <div class="assistant-input-wrapper">
-
-                    <input
-                        type="text"
-                        id="assistantInput"
-                        placeholder="Type a command..."
-                        autocomplete="off"
-                    >
-
-
-                    <button
-                        id="voiceButton"
-                        class="assistant-input-button"
-                        title="Voice command"
-                    >
-                        🎙
-                    </button>
-
-
-                    <button
-                        id="sendButton"
-                        class="assistant-send-button"
-                        title="Send command"
-                    >
-                        →
-                    </button>
-
-                </div>
-
+                <!-- STATUS -->
 
                 <div
                     class="assistant-listening-status"
-                    id="listeningStatus"
+                    id="assistantStatus"
                 >
-                    Click the microphone to speak
+                    Ready for your command
                 </div>
 
 
-                <!-- QUICK COMMANDS -->
-                <div class="assistant-quick-section">
+
+                <!-- BUTTON -->
+
+                <button
+                    id="startListening"
+                    class="assistant-listen-button"
+                >
+
+                    🎙
 
                     <span>
-                        QUICK COMMANDS
+                        Start Listening
                     </span>
 
+                </button>
 
-                    <div class="assistant-quick-grid">
 
-                        <button
-                            data-command="What time is it?"
-                        >
-                            🕐
-                            <span>Time</span>
-                        </button>
 
-                        <button
-                            data-command="Open accessibility settings"
-                        >
-                            ♿
-                            <span>Accessibility</span>
-                        </button>
+                <!-- COMMAND -->
 
-                        <button
-                            data-command="Open my settings"
-                        >
-                            ⚙
-                            <span>Settings</span>
-                        </button>
+                <div class="assistant-result-card">
 
-                        <button
-                            data-command="Read this page"
-                        >
-                            🔊
-                            <span>Read page</span>
-                        </button>
+                    <span class="assistant-result-label">
+                        YOU SAID
+                    </span>
 
-                    </div>
+                    <p id="recognizedCommand">
+                        Nothing yet
+                    </p>
 
                 </div>
 
 
-                <!-- CONVERSATION -->
-                <div class="assistant-history-section">
 
-                    <div class="assistant-history-heading">
+                <!-- RESPONSE -->
+
+                <div class="assistant-response-card">
+
+                    <span class="assistant-result-label">
+                        AURA
+                    </span>
+
+                    <p id="assistantResponse">
+                        I'm ready. Tell me what you need.
+                    </p>
+
+                </div>
+
+
+            </section>
+
+
+
+            <!-- COMMANDS -->
+
+            <section class="assistant-commands">
+
+                <span class="dashboard-label">
+                    AVAILABLE COMMANDS
+                </span>
+
+                <h2>
+                    Try saying
+                </h2>
+
+
+                <div class="assistant-command-grid">
+
+
+                    <button
+                        class="assistant-command"
+                        data-command="open dashboard"
+                    >
+                        <strong>
+                            Open dashboard
+                        </strong>
 
                         <span>
-                            RECENT COMMANDS
+                            Go to your AURA dashboard
                         </span>
 
-                        <button id="clearHistory">
-                            Clear
-                        </button>
-
-                    </div>
+                    </button>
 
 
-                    <div
-                        class="assistant-history"
-                        id="assistantHistory"
+
+                    <button
+                        class="assistant-command"
+                        data-command="open accessibility"
                     >
+                        <strong>
+                            Open accessibility
+                        </strong>
 
-                        <div class="history-empty">
-                            No commands yet.
-                        </div>
+                        <span>
+                            Open accessibility controls
+                        </span>
 
-                    </div>
+                    </button>
+
+
+
+                    <button
+                        class="assistant-command"
+                        data-command="open settings"
+                    >
+                        <strong>
+                            Open settings
+                        </strong>
+
+                        <span>
+                            Manage AURA settings
+                        </span>
+
+                    </button>
+
+
+
+                    <button
+                        class="assistant-command"
+                        data-command="go back"
+                    >
+                        <strong>
+                            Go back
+                        </strong>
+
+                        <span>
+                            Return to the previous page
+                        </span>
+
+                    </button>
+
+
+
+                    <button
+                        class="assistant-command"
+                        data-command="read page"
+                    >
+                        <strong>
+                            Read page
+                        </strong>
+
+                        <span>
+                            AURA will read this page aloud
+                        </span>
+
+                    </button>
+
+
+
+                    <button
+                        class="assistant-command"
+                        data-command="stop speaking"
+                    >
+                        <strong>
+                            Stop speaking
+                        </strong>
+
+                        <span>
+                            Stop AURA's speech
+                        </span>
+
+                    </button>
+
 
                 </div>
 
             </section>
 
+
         </main>
 
     </div>
+
 `
+
 
 
 /* =========================================
    ELEMENTS
    ========================================= */
 
-const input =
-    document.querySelector('#assistantInput')
+const startListening =
+    document.querySelector('#startListening')
 
-const sendButton =
-    document.querySelector('#sendButton')
+const assistantStatus =
+    document.querySelector('#assistantStatus')
 
-const voiceButton =
-    document.querySelector('#voiceButton')
+const recognizedCommand =
+    document.querySelector('#recognizedCommand')
 
-const responseText =
-    document.querySelector('#responseText')
+const assistantResponse =
+    document.querySelector('#assistantResponse')
 
-const listeningStatus =
-    document.querySelector('#listeningStatus')
+const assistantOrb =
+    document.querySelector('#assistantOrb')
 
-const history =
-    document.querySelector('#assistantHistory')
-
-const clearHistory =
-    document.querySelector('#clearHistory')
 
 
 /* =========================================
-   RESPONSE
+   SPEECH RECOGNITION
    ========================================= */
 
-function respondToCommand(command) {
+const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition
 
-    const lower =
-        command.toLowerCase().trim()
 
+let recognition = null
 
-    if (!lower) {
-        return
-    }
 
+if (SpeechRecognition) {
 
-    let response =
-        "I'm ready. Tell me what you'd like me to do."
-
-
-    if (
-        lower.includes('time')
-    ) {
-
-        const now =
-            new Date()
-
-        response =
-            `The current time is ${now.toLocaleTimeString(
-                [],
-                {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }
-            )}.`
-
-    }
-
-
-    else if (
-        lower.includes('accessibility')
-    ) {
-
-        response =
-            'Opening the accessibility center.'
-
-        setTimeout(() => {
-
-            window.location.href =
-                '/pages/accessibility.html'
-
-        }, 700)
-
-    }
-
-
-    else if (
-        lower.includes('settings')
-    ) {
-
-        response =
-            'Opening your AURA settings.'
-
-        setTimeout(() => {
-
-            window.location.href =
-                '/pages/settings.html'
-
-        }, 700)
-
-    }
-
-
-    else if (
-        lower.includes('read')
-        &&
-        lower.includes('page')
-    ) {
-
-        response =
-            'I can read the page for you.'
-
-        speak(
-            document.body.innerText
-        )
-
-    }
-
-
-    else if (
-        lower.includes('hello')
-        ||
-        lower.includes('hi')
-    ) {
-
-        response =
-            'Hello. It is good to have you here. How can I help?'
-
-    }
-
-
-    else if (
-        lower.includes('who are you')
-        ||
-        lower.includes('what are you')
-    ) {
-
-        response =
-            'I am AURA, your intelligent personal assistant.'
-
-    }
-
-
-    responseText.textContent =
-        response
-
-
-    addHistory(
-        command,
-        response
-    )
-
-
-    if (
-        document.querySelector(
-            '#voiceButton'
-        ).dataset.speaking === 'true'
-    ) {
-
-        speak(response)
-
-    }
-
-}
-
-
-/* =========================================
-   SEND COMMAND
-   ========================================= */
-
-function sendCommand() {
-
-    const command =
-        input.value.trim()
-
-
-    if (!command) {
-        return
-    }
-
-
-    respondToCommand(command)
-
-    input.value = ''
-
-}
-
-
-/* =========================================
-   SPEECH
-   ========================================= */
-
-function speak(text) {
-
-    if (
-        !('speechSynthesis' in window)
-    ) {
-
-        return
-    }
-
-
-    window.speechSynthesis.cancel()
-
-
-    const speech =
-        new SpeechSynthesisUtterance(text)
-
-
-    speech.rate = 0.9
-
-    speech.pitch = 1
-
-    speech.volume = 1
-
-
-    window.speechSynthesis.speak(
-        speech
-    )
-
-}
-
-
-/* =========================================
-   VOICE RECOGNITION
-   ========================================= */
-
-function startVoiceRecognition() {
-
-    if (
-        !('webkitSpeechRecognition' in window)
-        &&
-        !('SpeechRecognition' in window)
-    ) {
-
-        listeningStatus.textContent =
-            'Voice recognition is not supported in this browser.'
-
-        return
-    }
-
-
-    const Recognition =
-        window.SpeechRecognition ||
-        window.webkitSpeechRecognition
-
-
-    const recognition =
-        new Recognition()
-
+    recognition =
+        new SpeechRecognition()
 
     recognition.lang =
         'en-IN'
@@ -529,54 +346,151 @@ function startVoiceRecognition() {
     recognition.continuous =
         false
 
+}
 
-    listeningStatus.textContent =
+
+
+/* =========================================
+   START LISTENING
+   ========================================= */
+
+function startVoiceRecognition() {
+
+    if (!recognition) {
+
+        assistantStatus.textContent =
+            'Voice recognition is not supported in this browser.'
+
+        assistantResponse.textContent =
+            'Please use Google Chrome for voice commands.'
+
+        return
+
+    }
+
+
+    assistantStatus.textContent =
         'Listening... Speak now.'
 
-    voiceButton.classList.add(
-        'recording'
+    startListening.querySelector('span').textContent =
+        'Listening...'
+
+
+    assistantOrb.classList.add(
+        'assistant-orb-listening'
     )
 
 
-    recognition.start()
+    try {
+
+        recognition.start()
+
+    } catch (error) {
+
+        console.log(
+            'Recognition already running.'
+        )
+
+    }
+
+}
+
+
+
+/* =========================================
+   RECOGNITION START
+   ========================================= */
+
+if (recognition) {
+
+    recognition.onstart =
+        () => {
+
+            assistantStatus.textContent =
+                'Listening...'
+
+        }
+
 
 
     recognition.onresult =
         (event) => {
 
             const command =
-                event.results[0][0].transcript
+                event.results[0][0]
+                    .transcript
+                    .trim()
 
 
-            input.value =
+            recognizedCommand.textContent =
                 command
 
 
-            listeningStatus.textContent =
-                `Heard: "${command}"`
+            assistantStatus.textContent =
+                'Command received.'
 
 
-            respondToCommand(
+            startListening
+                .querySelector('span')
+                .textContent =
+                    'Start Listening'
+
+
+            assistantOrb.classList.remove(
+                'assistant-orb-listening'
+            )
+
+
+            processCommand(
                 command
             )
 
         }
 
 
-    recognition.onerror =
-        () => {
 
-            listeningStatus.textContent =
-                'I could not hear that. Try again.'
+    recognition.onerror =
+        (event) => {
+
+            console.log(
+                'Speech recognition error:',
+                event.error
+            )
+
+
+            assistantStatus.textContent =
+                'Unable to hear you.'
+
+
+            assistantResponse.textContent =
+                'Please try again.'
+
+
+            startListening
+                .querySelector('span')
+                .textContent =
+                    'Start Listening'
+
+
+            assistantOrb.classList.remove(
+                'assistant-orb-listening'
+            )
 
         }
+
 
 
     recognition.onend =
         () => {
 
-            voiceButton.classList.remove(
-                'recording'
+            startListening
+                .querySelector('span')
+                .textContent =
+                    'Start Listening'
+
+
+            assistantOrb.classList.remove(
+                'assistant-orb-listening'
             )
 
         }
@@ -584,115 +498,287 @@ function startVoiceRecognition() {
 }
 
 
+
 /* =========================================
-   HISTORY
+   COMMAND PROCESSOR
    ========================================= */
 
-function addHistory(
-    command,
-    response
+function processCommand(
+    command
 ) {
 
-    const empty =
-        history.querySelector(
-            '.history-empty'
+    const text =
+        command
+            .toLowerCase()
+            .trim()
+
+
+
+    /* DASHBOARD */
+
+    if (
+        text.includes('open dashboard') ||
+        text.includes('go to dashboard') ||
+        text === 'dashboard'
+    ) {
+
+        respond(
+            'Opening your dashboard.'
         )
 
+        setTimeout(
+            () => {
 
-    if (empty) {
-        empty.remove()
+                window.location.href =
+                    '/pages/dashboard.html'
+
+            },
+            700
+        )
+
+        return
+
     }
 
 
-    const item =
-        document.createElement(
-            'div'
+
+    /* ACCESSIBILITY */
+
+    if (
+        text.includes('open accessibility') ||
+        text.includes('accessibility')
+    ) {
+
+        respond(
+            'Opening accessibility settings.'
         )
 
+        setTimeout(
+            () => {
 
-    item.className =
-        'assistant-history-item'
+                window.location.href =
+                    '/pages/accessibility.html'
 
+            },
+            700
+        )
 
-    item.innerHTML = `
-        <div class="history-command">
-            <span>You</span>
-            ${escapeHTML(command)}
-        </div>
+        return
 
-        <div class="history-response">
-            <span>AURA</span>
-            ${escapeHTML(response)}
-        </div>
-    `
+    }
 
 
-    history.prepend(item)
+
+    /* SETTINGS */
+
+    if (
+        text.includes('open settings') ||
+        text.includes('settings')
+    ) {
+
+        respond(
+            'Opening AURA settings.'
+        )
+
+        setTimeout(
+            () => {
+
+                window.location.href =
+                    '/pages/settings.html'
+
+            },
+            700
+        )
+
+        return
+
+    }
+
+
+
+    /* GO BACK */
+
+    if (
+        text.includes('go back') ||
+        text.includes('back')
+    ) {
+
+        respond(
+            'Going back.'
+        )
+
+        setTimeout(
+            () => {
+
+                window.history.back()
+
+            },
+            500
+        )
+
+        return
+
+    }
+
+
+
+    /* READ PAGE */
+
+    if (
+        text.includes('read page') ||
+        text.includes('read this page') ||
+        text.includes('read the page')
+    ) {
+
+        respond(
+            'Reading the current page.'
+        )
+
+        readPage()
+
+        return
+
+    }
+
+
+
+    /* STOP SPEAKING */
+
+    if (
+        text.includes('stop speaking') ||
+        text.includes('stop talking') ||
+        text === 'stop'
+    ) {
+
+        window.speechSynthesis.cancel()
+
+        assistantResponse.textContent =
+            'Speech stopped.'
+
+        assistantStatus.textContent =
+            'Ready for your command.'
+
+        return
+
+    }
+
+
+
+    /* UNKNOWN COMMAND */
+
+    respond(
+        `I heard "${command}". I don't have an action for that command yet.`
+    )
 
 }
 
 
+
 /* =========================================
-   HTML ESCAPE
+   AURA RESPONSE
    ========================================= */
 
-function escapeHTML(text) {
+function respond(
+    message
+) {
 
-    const div =
-        document.createElement(
-            'div'
-        )
+    assistantResponse.textContent =
+        message
 
-    div.textContent =
-        text
 
-    return div.innerHTML
+    speak(
+        message
+    )
 
 }
 
 
+
 /* =========================================
-   EVENTS
+   TEXT TO SPEECH
    ========================================= */
 
-sendButton.addEventListener(
-    'click',
-    sendCommand
-)
+function speak(
+    text
+) {
 
+    if (
+        !('speechSynthesis' in window)
+    ) {
 
-input.addEventListener(
-    'keydown',
-    (event) => {
-
-        if (
-            event.key === 'Enter'
-        ) {
-
-            sendCommand()
-
-        }
+        return
 
     }
-)
 
 
-voiceButton.addEventListener(
+    window.speechSynthesis.cancel()
+
+
+    const speech =
+        new SpeechSynthesisUtterance(
+            text
+        )
+
+
+    speech.rate =
+        0.9
+
+    speech.pitch =
+        1
+
+    speech.volume =
+        1
+
+
+    window.speechSynthesis.speak(
+        speech
+    )
+
+}
+
+
+
+/* =========================================
+   READ PAGE
+   ========================================= */
+
+function readPage() {
+
+    const pageText =
+        document.querySelector(
+            '.assistant-main'
+        ).innerText
+
+
+    speak(
+        pageText
+    )
+
+}
+
+
+
+/* =========================================
+   LISTEN BUTTON
+   ========================================= */
+
+startListening.addEventListener(
     'click',
     startVoiceRecognition
 )
 
 
+
 /* =========================================
-   QUICK COMMANDS
+   COMMAND BUTTONS
    ========================================= */
 
 document
     .querySelectorAll(
-        '.assistant-quick-grid button'
+        '.assistant-command'
     )
     .forEach(
-        button => {
+        (button) => {
 
             button.addEventListener(
                 'click',
@@ -701,50 +787,17 @@ document
                     const command =
                         button.dataset.command
 
-                    input.value =
+
+                    recognizedCommand.textContent =
                         command
 
-                    respondToCommand(
+
+                    processCommand(
                         command
                     )
 
                 }
             )
-
-        }
-    )
-
-
-/* =========================================
-   CLEAR HISTORY
-   ========================================= */
-
-clearHistory.addEventListener(
-    'click',
-    () => {
-
-        history.innerHTML = `
-            <div class="history-empty">
-                No commands yet.
-            </div>
-        `
-
-    }
-)
-
-
-/* =========================================
-   LOGOUT
-   ========================================= */
-
-document
-    .querySelector('#assistantLogout')
-    .addEventListener(
-        'click',
-        () => {
-
-            window.location.href =
-                '/pages/login.html'
 
         }
     )
