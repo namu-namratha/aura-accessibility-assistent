@@ -88,13 +88,18 @@ app.post("/api/chat", async (req, res) => {
       answer
     });
   } catch (error) {
-    console.error("AURA AI error:", error.message);
+    console.error("AURA AI error:", {
+        name: error.name,
+        status: error.status,
+        code: error.code,
+        message: error.message
+    });
 
     res.status(500).json({
-      success: false,
-      message: "AURA could not answer right now. Please try again."
+        success: false,
+        message: "AURA could not answer right now. Please try again."
     });
-  }
+}
 });
 
 // Unknown routes

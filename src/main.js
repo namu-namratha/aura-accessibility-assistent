@@ -1,4 +1,3 @@
-
 import "./style.css";
 
 const app = document.querySelector("#app");
@@ -28,7 +27,8 @@ app.innerHTML = `
           YOUR ACCESSIBILITY COMPANION
         </span>
 
-        <h1>Technology that<br>
+        <h1>
+          Technology that<br>
           <span>listens to you.</span>
         </h1>
 
@@ -39,10 +39,11 @@ app.innerHTML = `
         </p>
 
         <div class="hero-actions">
-          <button id="startListening" class="primary-button">
+          <button id="startListening" class="primary-button" type="button">
             <span aria-hidden="true">🎙</span>
             Start Speaking
           </button>
+
           <a class="secondary-button" href="/pages/assistant.html">
             Explore Assistant <span aria-hidden="true">→</span>
           </a>
@@ -59,6 +60,7 @@ app.innerHTML = `
             <span class="small-label">YOUR ASSISTANT</span>
             <h2>AURA is ready</h2>
           </div>
+
           <span class="online-badge">
             <span class="status-dot"></span> Online
           </span>
@@ -66,20 +68,31 @@ app.innerHTML = `
 
         <div class="orb-area">
           <div class="orb-glow"></div>
-          <button id="orbButton" class="assistant-orb"
-            aria-label="Start voice recognition">
+
+          <button
+            id="orbButton"
+            class="assistant-orb"
+            type="button"
+            aria-label="Start voice recognition"
+          >
             <span aria-hidden="true">🎙</span>
           </button>
+
           <p class="orb-caption">YOUR VOICE. YOUR CONTROL.</p>
         </div>
 
-        <p id="voiceStatus" class="voice-status"
-          role="status" aria-live="polite">
+        <p
+          id="voiceStatus"
+          class="voice-status"
+          role="status"
+          aria-live="polite"
+        >
           Ready when you are. Select Start Speaking.
         </p>
 
         <div class="conversation">
           <div class="message-icon user-icon" aria-hidden="true">YOU</div>
+
           <div class="message-content">
             <span class="small-label">YOU SAID</span>
             <p id="recognizedCommand">Nothing yet</p>
@@ -88,6 +101,7 @@ app.innerHTML = `
 
         <div class="conversation assistant-message">
           <div class="message-icon aura-icon" aria-hidden="true">A</div>
+
           <div class="message-content">
             <span class="small-label">AURA SAYS</span>
             <p id="assistantResponse">
@@ -97,10 +111,11 @@ app.innerHTML = `
         </div>
 
         <div class="speech-actions">
-          <button id="repeatResponse" class="text-button">
+          <button id="repeatResponse" class="text-button" type="button">
             🔊 Repeat response
           </button>
-          <button id="stopSpeaking" class="text-button">
+
+          <button id="stopSpeaking" class="text-button" type="button">
             Stop speaking
           </button>
         </div>
@@ -118,21 +133,28 @@ app.innerHTML = `
         <a class="feature-card" href="/pages/assistant.html">
           <span class="feature-icon" aria-hidden="true">🎙</span>
           <h3>Voice Assistant</h3>
-          <p>Speak naturally to explore supported commands and get spoken responses.</p>
+          <p>
+            Speak naturally to explore supported commands and get spoken
+            responses.
+          </p>
           <span class="feature-link">Explore assistant →</span>
         </a>
 
         <a class="feature-card" href="/pages/accessibility.html">
           <span class="feature-icon" aria-hidden="true">♿</span>
           <h3>Accessibility Tools</h3>
-          <p>Explore tools designed to make website interaction easier.</p>
+          <p>
+            Explore tools designed to make website interaction easier.
+          </p>
           <span class="feature-link">Explore tools →</span>
         </a>
 
         <a class="feature-card" href="/pages/dashboard.html">
           <span class="feature-icon" aria-hidden="true">▦</span>
           <h3>Your Dashboard</h3>
-          <p>Access the AURA dashboard and its available features.</p>
+          <p>
+            Access the AURA dashboard and its available features.
+          </p>
           <span class="feature-link">Open dashboard →</span>
         </a>
       </div>
@@ -142,26 +164,45 @@ app.innerHTML = `
       <div>
         <span class="eyebrow">GETTING STARTED</span>
         <h2>Try saying something.</h2>
-        <p>Select Start Speaking and try one of these supported commands.</p>
+        <p>
+          Select Start Speaking and try one of these supported commands.
+        </p>
       </div>
 
       <div class="command-list">
-        <button class="command-chip" data-command="hello aura">
+        <button class="command-chip" type="button" data-command="hello aura">
           “Hello AURA”
         </button>
-        <button class="command-chip" data-command="what can you do">
+
+        <button
+          class="command-chip"
+          type="button"
+          data-command="what can you do"
+        >
           “What can you do?”
         </button>
-        <button class="command-chip" data-command="read this page">
+
+        <button
+          class="command-chip"
+          type="button"
+          data-command="read this page"
+        >
           “Read this page”
         </button>
-        <button class="command-chip" data-command="open login">
+
+        <button class="command-chip" type="button" data-command="open login">
           “Open login”
         </button>
-        <button class="command-chip" data-command="open registration">
+
+        <button
+          class="command-chip"
+          type="button"
+          data-command="open registration"
+        >
           “Open registration”
         </button>
-        <button class="command-chip" data-command="help">
+
+        <button class="command-chip" type="button" data-command="help">
           “Help”
         </button>
       </div>
@@ -173,7 +214,11 @@ app.innerHTML = `
       <span class="brand-icon" aria-hidden="true">A</span>
       <span>AURA</span>
     </a>
-    <p>Making digital experiences more accessible, one voice at a time.</p>
+
+    <p>
+      Making digital experiences more accessible, one voice at a time.
+    </p>
+
     <span>© ${new Date().getFullYear()} AURA</span>
   </footer>
 `;
@@ -193,7 +238,10 @@ let recognition = null;
 let lastResponse = "Hello! I'm AURA. How can I help you today?";
 
 function speakText(message) {
-  if (!("speechSynthesis" in window)) {
+  if (
+    !("speechSynthesis" in window) ||
+    typeof SpeechSynthesisUtterance === "undefined"
+  ) {
     statusElement.textContent =
       "Spoken responses are not supported in this browser.";
     return;
@@ -204,6 +252,20 @@ function speakText(message) {
   const utterance = new SpeechSynthesisUtterance(message);
   utterance.lang = "en-IN";
   utterance.rate = 0.95;
+
+  utterance.onstart = () => {
+    statusElement.textContent = "AURA is speaking.";
+  };
+
+  utterance.onend = () => {
+    statusElement.textContent =
+      "Response finished. Ready for your next command.";
+  };
+
+  utterance.onerror = () => {
+    statusElement.textContent =
+      "Speech playback could not be completed.";
+  };
 
   window.speechSynthesis.speak(utterance);
 }
@@ -217,11 +279,20 @@ function respond(message, shouldSpeak = true) {
   }
 }
 
+function stopSpeech() {
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+  }
+
+  statusElement.textContent = "Speech stopped.";
+}
+
 function processCommand(command) {
   const text = command.toLowerCase().trim();
+
   recognizedElement.textContent = command;
 
-  if (/\\b(hello|hi|hey)\\b/.test(text)) {
+  if (/\b(hello|hi|hey)\b/.test(text)) {
     respond(
       "Hello! I'm AURA, your accessibility assistant. I'm ready to help you."
     );
@@ -238,7 +309,7 @@ function processCommand(command) {
     text === "help"
   ) {
     respond(
-      'You can say "read this page", "open login", "open registration", "open dashboard", "open accessibility", or "open settings".'
+      'You can say "read this page", "open login", "open registration", "open dashboard", "open accessibility", "open assistant", or "open settings".'
     );
   } else if (
     text.includes("read page") ||
@@ -246,8 +317,7 @@ function processCommand(command) {
     text.includes("read the page")
   ) {
     const pageText =
-      document.querySelector("main")?.innerText ||
-      document.body.innerText;
+      document.querySelector("main")?.innerText || document.body.innerText;
 
     lastResponse = "Reading the page content now.";
     responseElement.textContent = lastResponse;
@@ -257,9 +327,7 @@ function processCommand(command) {
     text.includes("stop reading") ||
     text === "stop"
   ) {
-    window.speechSynthesis?.cancel();
-    respond("Speech stopped.", false);
-    statusElement.textContent = "Speech stopped.";
+    stopSpeech();
   } else if (text.includes("open login") || text === "login") {
     respond("Opening the login page.");
     window.location.href = "/pages/login.html";
@@ -363,8 +431,10 @@ function startListening() {
   } catch (error) {
     startButton.disabled = false;
     orbButton.disabled = false;
+
     statusElement.textContent =
       "Could not start voice recognition. Please try again.";
+
     console.error("AURA speech recognition error:", error);
   }
 }
@@ -373,13 +443,14 @@ startButton.addEventListener("click", startListening);
 orbButton.addEventListener("click", startListening);
 
 repeatButton.addEventListener("click", () => {
-  speakText(lastResponse);
+  if (lastResponse) {
+    speakText(lastResponse);
+  } else {
+    statusElement.textContent = "There is no response to repeat yet.";
+  }
 });
 
-stopButton.addEventListener("click", () => {
-  window.speechSynthesis?.cancel();
-  statusElement.textContent = "Speech stopped.";
-});
+stopButton.addEventListener("click", stopSpeech);
 
 document.querySelectorAll("[data-command]").forEach((button) => {
   button.addEventListener("click", () => {
