@@ -5344,3 +5344,856 @@ a:focus-visible {
         transition-duration: 0.01ms !important;
     }
 }
+
+
+/* =========================================
+   AURA ACCESSIBILITY PAGE
+   ========================================= */
+
+.accessibility-content {
+  width: min(100% - 40px, 1000px);
+  margin: 48px auto !important;
+  padding: 32px !important;
+  color: var(--text-primary, #f5f7ff);
+}
+
+.accessibility-content h1 {
+  margin: 12px 0;
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.accessibility-content > p {
+  color: var(--text-secondary, #aab3ca);
+  line-height: 1.7;
+}
+
+.accessibility-content section.feature-card {
+  padding: 28px !important;
+  margin: 24px 0 !important;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 20px;
+  background: rgba(17, 24, 45, 0.85);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
+}
+
+.accessibility-content section h2 {
+  margin: 0 0 24px;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.accessibility-content label {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 28px;
+  color: var(--text-primary, #f5f7ff);
+  cursor: pointer;
+  line-height: 1.6;
+}
+
+.accessibility-content input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #7667ff;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.accessibility-content button {
+  margin: 6px 8px 6px 0;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.accessibility-content button:hover {
+  transform: translateY(-1px);
+}
+
+.accessibility-content button:focus-visible,
+.accessibility-content input:focus-visible {
+  outline: 3px solid #57d9ff;
+  outline-offset: 4px;
+}
+
+.accessibility-content .primary-button {
+  background: linear-gradient(100deg, #7968ff, #24c8f2);
+  color: #fff;
+  border: 0;
+}
+
+.accessibility-content .secondary-button {
+  background: #171f34;
+  color: #f5f7ff;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+#saveMessage {
+  min-height: 24px;
+  color: #52e6b1;
+  font-weight: 600;
+}
+
+body.accessibility-high-contrast {
+  background: #000 !important;
+  color: #fff !important;
+}
+
+body.accessibility-high-contrast .accessibility-content section.feature-card {
+  background: #000;
+  border: 2px solid #fff;
+}
+
+body.accessibility-high-contrast .accessibility-content p,
+body.accessibility-high-contrast .accessibility-content label {
+  color: #fff;
+}
+
+body.accessibility-large-text .accessibility-content {
+  font-size: 1.2rem;
+}
+
+body.accessibility-large-text .accessibility-content h1 {
+  font-size: clamp(2.5rem, 6vw, 3.5rem);
+}
+
+body.accessibility-reduced-motion *,
+body.accessibility-reduced-motion *::before,
+body.accessibility-reduced-motion *::after {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+body.keyboard-navigation-enabled :focus-visible,
+body.focus-indicators-enabled :focus-visible {
+  outline: 3px solid #57d9ff !important;
+  outline-offset: 4px !important;
+}
+
+@media (max-width: 650px) {
+  .accessibility-content {
+    width: auto;
+    margin: 24px 12px !important;
+    padding: 16px !important;
+  }
+
+  .accessibility-content section.feature-card {
+    padding: 20px !important;
+  }
+
+  .accessibility-content button {
+    max-width: 100%;
+  }
+}
+
+
+/* =========================================
+   AURA VOICE ASSISTANT — CLEAN MODERN UI
+   ========================================= */
+
+body:has(#assistant-app) {
+  margin: 0;
+  min-height: 100vh;
+  background: #0b1020;
+  color: #edf2ff;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+body:has(#assistant-app) *,
+body:has(#assistant-app) *::before,
+body:has(#assistant-app) *::after {
+  box-sizing: border-box;
+}
+
+#assistant-app {
+  --assistant-bg: #0b1020;
+  --assistant-surface: #121a2d;
+  --assistant-surface-hover: #19243a;
+  --assistant-border: #29354d;
+  --assistant-text: #edf2ff;
+  --assistant-muted: #9aa9c3;
+  --assistant-accent: #6ee7f9;
+  --assistant-accent-dark: #193c4b;
+
+  width: 100%;
+  min-height: 100vh;
+  color: var(--assistant-text);
+}
+
+/* Header */
+
+#assistant-app header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 18px clamp(20px, 5vw, 76px);
+  background: rgba(11, 16, 32, 0.92);
+  border-bottom: 1px solid rgba(154, 169, 195, 0.14);
+  backdrop-filter: blur(16px);
+}
+
+#assistant-app header h1,
+#assistant-app header h2 {
+  margin: 0;
+}
+
+#assistant-app nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+#assistant-app a {
+  color: #b9c7df;
+  text-decoration: none;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+#assistant-app nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 13px;
+  border-radius: 10px;
+  font-size: 0.94rem;
+}
+
+#assistant-app nav a:hover {
+  color: var(--assistant-accent);
+  background: rgba(110, 231, 249, 0.07);
+}
+
+#assistant-app a:focus-visible,
+#assistant-app button:focus-visible,
+#assistant-app input:focus-visible,
+#assistant-app select:focus-visible,
+#assistant-app textarea:focus-visible {
+  outline: 3px solid var(--assistant-accent);
+  outline-offset: 3px;
+}
+
+/* Main content */
+
+#assistant-app main {
+  width: min(1080px, calc(100% - 40px));
+  margin: 44px auto;
+}
+
+#assistant-app h1,
+#assistant-app h2,
+#assistant-app h3 {
+  color: var(--assistant-text);
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+
+#assistant-app h1 {
+  margin: 0 0 14px;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 750;
+}
+
+#assistant-app h2 {
+  margin: 0 0 16px;
+  font-size: clamp(1.35rem, 2.5vw, 1.8rem);
+}
+
+#assistant-app h3 {
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+}
+
+#assistant-app p {
+  color: var(--assistant-muted);
+}
+
+#assistant-app main > p {
+  max-width: 700px;
+}
+
+/* Cards and panels */
+
+#assistant-app section,
+#assistant-app article,
+#assistant-app [class*="card"],
+#assistant-app [class*="panel"] {
+  border-color: var(--assistant-border);
+}
+
+#assistant-app [class*="card"],
+#assistant-app [class*="panel"] {
+  border-radius: 16px;
+}
+
+#assistant-app article,
+#assistant-app section {
+  min-width: 0;
+}
+
+#assistant-app [class*="card"],
+#assistant-app [class*="panel"] {
+  overflow-wrap: anywhere;
+}
+
+/* Buttons */
+
+#assistant-app button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 11px 18px;
+  border: 1px solid #34425c;
+  border-radius: 11px;
+  background: #182238;
+  color: var(--assistant-text);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+#assistant-app button:hover:not(:disabled) {
+  background: #22304a;
+  border-color: #536783;
+  transform: translateY(-1px);
+}
+
+#assistant-app button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+#assistant-app button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Primary action buttons */
+
+#assistant-app button[type="submit"],
+#assistant-app [class*="send"],
+#assistant-app [class*="primary"] {
+  border-color: transparent;
+  background: #a5f3fc;
+  color: #10202d;
+}
+
+#assistant-app button[type="submit"]:hover:not(:disabled),
+#assistant-app [class*="send"]:hover:not(:disabled),
+#assistant-app [class*="primary"]:hover:not(:disabled) {
+  background: #cffafe;
+  color: #10202d;
+}
+
+/* Form fields */
+
+#assistant-app input,
+#assistant-app select,
+#assistant-app textarea {
+  width: 100%;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 12px 14px;
+  border: 1px solid #34425c;
+  border-radius: 11px;
+  background: #0e1628;
+  color: var(--assistant-text);
+  font: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#assistant-app textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+#assistant-app input::placeholder,
+#assistant-app textarea::placeholder {
+  color: #7585a0;
+}
+
+#assistant-app input:focus,
+#assistant-app select:focus,
+#assistant-app textarea:focus {
+  border-color: var(--assistant-accent);
+  box-shadow: 0 0 0 3px rgba(110, 231, 249, 0.1);
+  outline: none;
+}
+
+/* Assistant responses, transcript and status */
+
+#assistant-app [id*="Response"],
+#assistant-app [id*="response"],
+#assistant-app [id*="Transcript"],
+#assistant-app [id*="transcript"],
+#assistant-app [id*="Status"],
+#assistant-app [id*="status"] {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+#assistant-app #assistantResponse {
+  min-height: 90px;
+  padding: 20px;
+  border: 1px solid var(--assistant-border);
+  border-radius: 15px;
+  background: var(--assistant-surface);
+  color: var(--assistant-text);
+  line-height: 1.75;
+}
+
+/* Message and conversation areas */
+
+#assistant-app [class*="message"] {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  border-radius: 14px;
+}
+
+#assistant-app [class*="chat"],
+#assistant-app [class*="conversation"] {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Command shortcuts and action groups */
+
+#assistant-app [class*="command"],
+#assistant-app [class*="actions"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+#assistant-app [class*="command"] button,
+#assistant-app [class*="actions"] button {
+  max-width: 100%;
+}
+
+/* Microphone and voice controls */
+
+#assistant-app button[id*="mic"],
+#assistant-app button[id*="Mic"],
+#assistant-app button[id*="voice"],
+#assistant-app button[id*="Voice"] {
+  min-width: 48px;
+  min-height: 48px;
+  border-color: rgba(110, 231, 249, 0.35);
+  border-radius: 14px;
+  background: var(--assistant-accent-dark);
+  color: var(--assistant-accent);
+}
+
+#assistant-app button[id*="mic"]:hover:not(:disabled),
+#assistant-app button[id*="Mic"]:hover:not(:disabled),
+#assistant-app button[id*="voice"]:hover:not(:disabled),
+#assistant-app button[id*="Voice"]:hover:not(:disabled) {
+  background: #245365;
+  border-color: var(--assistant-accent);
+}
+
+/* Horizontal separators */
+
+#assistant-app hr {
+  height: 1px;
+  margin: 24px 0;
+  border: 0;
+  background: var(--assistant-border);
+}
+
+/* Selection */
+
+#assistant-app ::selection {
+  background: rgba(110, 231, 249, 0.25);
+  color: #ffffff;
+}
+
+/* Responsive layout */
+
+@media (max-width: 700px) {
+  #assistant-app header {
+    position: static;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px 20px;
+  }
+
+  #assistant-app nav {
+    width: 100%;
+    gap: 6px;
+  }
+
+  #assistant-app nav a {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+  }
+
+  #assistant-app main {
+    width: calc(100% - 32px);
+    margin: 28px auto;
+  }
+
+  #assistant-app [class*="command"],
+  #assistant-app [class*="actions"] {
+    align-items: stretch;
+  }
+
+  #assistant-app [class*="command"] button,
+  #assistant-app [class*="actions"] button {
+    flex: 1 1 140px;
+  }
+
+  #assistant-app #assistantResponse {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 420px) {
+  #assistant-app h1 {
+    font-size: 2rem;
+  }
+
+  #assistant-app button {
+    max-width: 100%;
+    padding: 10px 13px;
+  }
+
+  #assistant-app [class*="command"],
+  #assistant-app [class*="actions"] {
+    gap: 8px;
+  }
+}
+
+/* Accessibility: reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  body:has(#assistant-app) *,
+  body:has(#assistant-app) *::before,
+  body:has(#assistant-app) *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
+/* AURA — Accessibility page using the Dashboard layout */
+.accessibility-dashboard {
+  min-height: 100vh;
+}
+
+.accessibility-dashboard .dashboard-main {
+  min-width: 0;
+}
+
+.accessibility-dashboard .dashboard-topbar {
+  align-items: flex-start;
+}
+
+.accessibility-dashboard .dashboard-topbar h1 {
+  margin: 8px 0;
+}
+
+.accessibility-dashboard .accessibility-content {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 30px 40px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.accessibility-dashboard .feature-card {
+  min-width: 0;
+  margin: 0;
+  padding: 26px;
+  border-radius: 18px;
+}
+
+.accessibility-dashboard .feature-card h2 {
+  margin: 0 0 8px;
+}
+
+.accessibility-dashboard .feature-card > p {
+  margin: 0 0 22px;
+}
+
+.accessibility-dashboard .feature-card label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.accessibility-dashboard .feature-card input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: #8b7cff;
+}
+
+.accessibility-dashboard .accessibility-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.accessibility-dashboard .accessibility-save-card {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.accessibility-dashboard .accessibility-save-card p {
+  margin-bottom: 0;
+}
+
+@media (max-width: 760px) {
+  .accessibility-dashboard .accessibility-content {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  .accessibility-dashboard .accessibility-save-card {
+    grid-column: auto;
+    align-items: flex-start;
+  }
+}
+
+
+/* AURA — Consistent Dashboard and Settings layout */
+
+.settings-page {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  min-height: 100vh;
+  background: #080c17;
+  color: #edf0ff;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+}
+
+.settings-page,
+.settings-page * {
+  box-sizing: border-box;
+}
+
+.settings-page .settings-sidebar {
+  position: sticky;
+  top: 0;
+  width: 260px;
+  height: 100vh;
+  min-height: 100vh;
+  padding: 28px 18px;
+  display: flex;
+  flex-direction: column;
+  background: #0c1222;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.settings-page .settings-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 8px 36px;
+  color: #f6f7ff;
+  font-size: 22px;
+  font-weight: 750;
+  letter-spacing: 2px;
+}
+
+.settings-page .settings-brand-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(151, 132, 255, 0.55);
+  border-radius: 14px;
+  background: linear-gradient(135deg, #8274ff, #3935a8);
+  color: #fff;
+  font-size: 23px;
+  font-weight: 800;
+}
+
+.settings-page .settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 0;
+}
+
+.settings-page .settings-nav a,
+.settings-page .settings-sidebar-bottom button {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: #aab7d6;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.settings-page .settings-nav a span {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  font-size: 18px;
+}
+
+.settings-page .settings-nav a:hover,
+.settings-page .settings-sidebar-bottom button:hover {
+  background: rgba(130, 116, 255, 0.1);
+  color: #fff;
+}
+
+.settings-page .settings-nav a.active {
+  border-color: rgba(130, 116, 255, 0.2);
+  background: linear-gradient(
+    110deg,
+    rgba(130, 116, 255, 0.2),
+    rgba(65, 66, 160, 0.1)
+  );
+  color: #fff;
+}
+
+.settings-page .settings-sidebar-bottom {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.settings-page .settings-main {
+  width: auto;
+  min-width: 0;
+  min-height: 100vh;
+  margin-left: 0;
+}
+
+.settings-page .settings-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  min-height: 76px;
+  padding: 15px 32px;
+  background: rgba(8, 12, 23, 0.92);
+  backdrop-filter: blur(14px);
+}
+
+.settings-page .settings-content {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 32px 40px;
+}
+
+.settings-page .settings-section,
+.settings-page .settings-save-area,
+.settings-page .settings-danger {
+  margin-bottom: 22px;
+}
+
+.settings-page a:focus-visible,
+.settings-page button:focus-visible,
+.settings-page input:focus-visible {
+  outline: 2px solid #b6aaff;
+  outline-offset: 4px;
+}
+
+@media (max-width: 900px) {
+  .settings-page {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .settings-page .settings-sidebar {
+    width: 220px;
+    padding: 24px 12px;
+  }
+
+  .settings-page .settings-content {
+    padding: 22px 18px 32px;
+  }
+}
+
+@media (max-width: 650px) {
+  .settings-page {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .settings-page .settings-sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    padding: 16px;
+  }
+
+  .settings-page .settings-brand {
+    padding: 4px 8px 18px;
+  }
+
+  .settings-page .settings-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .settings-page .settings-nav a {
+    min-width: 0;
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+
+  .settings-page .settings-sidebar-bottom {
+    margin-top: 12px;
+  }
+
+  .settings-page .settings-topbar {
+    position: relative;
+    padding: 18px;
+  }
+
+  .settings-page .settings-content {
+    padding: 16px;
+  }
+}

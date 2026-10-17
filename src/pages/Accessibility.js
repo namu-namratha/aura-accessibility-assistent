@@ -1,1145 +1,263 @@
-import '../style.css'
 
-const app = document.querySelector('#accessibility-app')
+import "../style.css";
+
+const app = document.getElementById("accessibility-app");
+
+if (!app) {
+  throw new Error('Accessibility container "#accessibility-app" was not found.');
+}
+
+const SETTINGS_KEY = "auraAccessibility";
+
+function readSettings() {
+  try {
+    return JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+const saved = readSettings();
+
 
 app.innerHTML = `
-    <div class="accessibility-page">
-
-        <!-- SIDEBAR -->
-        <aside class="accessibility-sidebar">
-
-            <div class="accessibility-brand">
-                <div class="accessibility-brand-icon">A</div>
-                <span>AURA</span>
-            </div>
-
-            <nav class="accessibility-nav">
-
-                <a href="/pages/dashboard.html">
-                    <span>⌂</span>
-                    Dashboard
-                </a>
-
-                <a href="/pages/dashboard.html#assistant">
-                    <span>◉</span>
-                    Voice Assistant
-                </a>
-
-                <a
-                    href="/pages/accessibility.html"
-                    class="active"
-                >
-                    <span>♿</span>
-                    Accessibility
-                </a>
-
-                <a href="/pages/dashboard.html#activity">
-                    <span>◷</span>
-                    Activity
-                </a>
-
-                <a href="/pages/settings.html">
-                    <span>⚙</span>
-                    Settings
-                </a>
-
-            </nav>
-
-            <div class="accessibility-sidebar-bottom">
-
-                <button id="accessibilityLogout">
-                    <span>↪</span>
-                    Log out
-                </button>
-
-            </div>
-
-        </aside>
-
-
-        <!-- MAIN -->
-        <main class="accessibility-main">
-
-            <!-- TOP BAR -->
-            <header class="accessibility-topbar">
-
-                <div class="accessibility-mobile-brand">
-
-                    <div class="accessibility-brand-icon">
-                        A
-                    </div>
-
-                    <span>AURA</span>
-
-                </div>
-
-
-                <div class="accessibility-page-title">
-
-                    <span>
-                        ACCESSIBILITY CENTER
-                    </span>
-
-                    <h1>
-                        Accessibility
-                    </h1>
-
-                </div>
-
-
-                <button
-                    class="accessibility-save-top"
-                    id="saveAccessibilityTop"
-                >
-                    Save changes
-                </button>
-
-            </header>
-
-
-            <!-- CONTENT -->
-            <section class="accessibility-content">
-
-
-                <!-- HERO -->
-                <section class="accessibility-hero">
-
-                    <div class="accessibility-hero-icon">
-                        ♿
-                    </div>
-
-                    <div>
-
-                        <span class="accessibility-label">
-                            AURA ACCESSIBILITY
-                        </span>
-
-                        <h2>
-                            Make AURA work for you.
-                        </h2>
-
-                        <p>
-                            Personalize voice, visual,
-                            motion and navigation features
-                            to create a more comfortable
-                            experience.
-                        </p>
-
-                    </div>
-
-                    <div class="accessibility-status">
-
-                        <span class="status-dot"></span>
-
-                        Accessibility ready
-
-                    </div>
-
-                </section>
-
-
-                <!-- QUICK ACCESS -->
-                <section class="accessibility-quick-grid">
-
-                    <button
-                        class="accessibility-quick-card"
-                        id="quickReadPage"
-                    >
-
-                        <div class="quick-access-icon">
-                            🔊
-                        </div>
-
-                        <div>
-
-                            <strong>
-                                Read this page
-                            </strong>
-
-                            <span>
-                                Hear the current page
-                                using speech.
-                            </span>
-
-                        </div>
-
-                        <b>
-                            →
-                        </b>
-
-                    </button>
-
-
-                    <button
-                        class="accessibility-quick-card"
-                        id="quickContrast"
-                    >
-
-                        <div class="quick-access-icon">
-                            ◐
-                        </div>
-
-                        <div>
-
-                            <strong>
-                                High contrast
-                            </strong>
-
-                            <span>
-                                Improve visual contrast
-                                across AURA.
-                            </span>
-
-                        </div>
-
-                        <b>
-                            →
-                        </b>
-
-                    </button>
-
-
-                    <button
-                        class="accessibility-quick-card"
-                        id="quickLargeText"
-                    >
-
-                        <div class="quick-access-icon">
-                            Aa
-                        </div>
-
-                        <div>
-
-                            <strong>
-                                Larger text
-                            </strong>
-
-                            <span>
-                                Increase the size of
-                                interface text.
-                            </span>
-
-                        </div>
-
-                        <b>
-                            →
-                        </b>
-
-                    </button>
-
-                </section>
-
-
-                <!-- VOICE -->
-                <section class="accessibility-section">
-
-                    <div class="accessibility-section-heading">
-
-                        <div>
-
-                            <span class="accessibility-label">
-                                VOICE
-                            </span>
-
-                            <h2>
-                                Voice & speech
-                            </h2>
-
-                            <p>
-                                Control how AURA listens
-                                and responds.
-                            </p>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="accessibility-options">
-
-
-                        <div class="accessibility-option">
-
-                            <div class="accessibility-option-icon">
-                                🎙
-                            </div>
-
-                            <div class="accessibility-option-content">
-
-                                <strong>
-                                    Voice commands
-                                </strong>
-
-                                <span>
-                                    Allow AURA to process
-                                    spoken commands.
-                                </span>
-
-                            </div>
-
-                            <label class="aura-switch">
-
-                                <input
-                                    type="checkbox"
-                                    id="accessVoice"
-                                    checked
-                                >
-
-                                <span></span>
-
-                            </label>
-
-                        </div>
-
-
-                        <div class="accessibility-option">
-
-                            <div class="accessibility-option-icon">
-                                🔊
-                            </div>
-
-                            <div class="accessibility-option-content">
-
-                                <strong>
-                                    Text-to-speech
-                                </strong>
-
-                                <span>
-                                    Allow AURA to speak
-                                    responses aloud.
-                                </span>
-
-                            </div>
-
-                            <label class="aura-switch">
-
-                                <input
-                                    type="checkbox"
-                                    id="accessSpeech"
-                                    checked
-                                >
-
-                                <span></span>
-
-                            </label>
-
-                        </div>
-
-
-                        <div class="accessibility-option">
-
-                            <div class="accessibility-option-icon">
-                                📝
-                            </div>
-
-                            <div class="accessibility-option-content">
-
-                                <strong>
-                                    Show spoken commands
-                                </strong>
-
-                                <span>
-                                    Display recognized voice
-                                    commands on screen.
-                                </span>
-
-                            </div>
-
-                            <label class="aura-switch">
-
-                                <input
-                                    type="checkbox"
-                                    id="showCommands"
-                                    checked
-                                >
-
-                                <span></span>
-
-                            </label>
-
-                        </div>
-
-
-                    </div>
-
-                </section>
-
-
-                <!-- VISUAL -->
-                <section class="accessibility-section">
-
-                    <div class="accessibility-section-heading">
-
-                        <div>
-
-                            <span class="accessibility-label">
-                                VISUAL
-                            </span>
-
-                            <h2>
-                                Visual accessibility
-                            </h2>
-
-                            <p>
-                                Adjust how information appears
-                                on the screen.
-                            </p>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="accessibility-options">
-
-
-                        <div class="accessibility-option">
-
-                            <div class="accessibility-option-icon">
-                                ◐
-                            </div>
-
-                            <div class="accessibility-option-content">
-
-                                <strong>
-                                    High contrast
-                                </strong>
-
-                                <span>
-                                    Increase contrast between
-                                    backgrounds and content.
-                                </span>
-
-                            </div>
-
-                            <label class="aura-switch">
-
-                                <input
-                                    type="checkbox"
-                                    id="accessContrast"
-                                >
-
-                                <span></span>
-
-                            </label>
-
-                        </div>
-
-
-                        <div class="accessibility-option">
-
-                            <div class="accessibility-option-icon">
-                                Aa
-                            </div>
-
-                            <div class="accessibility-option-content">
-
-                                <strong>
-                                    Larger text
-                                </strong>
-
-                                <span>
-                                    Increase text size throughout
-                                    the interface.
-                                </span>
-
-                            </div>
-
-                            <label class="aura-switch">
-
-                                <input
-                                    type="checkbox"
-                                    id="accessLargeText"
-                                >
-
-                                <span></span>
-
-                            </label>
-
-                        </div>
-
-
-                        <div class="accessibility-option">
-
-                            <div class="accessibility-option-icon">
-                                ↕
-                            </div>
-
-                            <div class="accessibility-option-content">
-
-                                <strong>
-                                    Reduced motion
-                                </strong>
-
-                                <span>
-                                    Reduce animations and
-                                    interface movement.
-                                </span>
-
-                            </div>
-
-                            <label class="aura-switch">
-
-                                <input
-                                    type="checkbox"
-                                    id="accessReducedMotion"
-                                >
-
-                                <span></span>
-
-                            </label>
-
-                        </div>
-
-
-                    </div>
-
-                </section>
-
-
-                <!-- NAVIGATION -->
-                <section class="accessibility-section">
-
-                    <div class="accessibility-section-heading">
-
-                        <div>
-
-                            <span class="accessibility-label">
-                                NAVIGATION
-                            </span>
-
-                            <h2>
-                                Navigation assistance
-                            </h2>
-
-                            <p>
-                                Make interacting with AURA
-                                easier and more predictable.
-                            </p>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="accessibility-options">
-
-
-                        <div class="accessibility-option">
-
-                            <div class="accessibility-option-icon">
-                                ⌨
-                            </div>
-
-                            <div class="accessibility-option-content">
-
-                                <strong>
-                                    Keyboard navigation
-                                </strong>
-
-                                <span>
-                                    Highlight interactive elements
-                                    when navigating with a keyboard.
-                                </span>
-
-                            </div>
-
-                            <label class="aura-switch">
-
-                                <input
-                                    type="checkbox"
-                                    id="keyboardNavigation"
-                                    checked
-                                >
-
-                                <span></span>
-
-                            </label>
-
-                        </div>
-
-
-                        <div class="accessibility-option">
-
-                            <div class="accessibility-option-icon">
-                                ✦
-                            </div>
-
-                            <div class="accessibility-option-content">
-
-                                <strong>
-                                    Focus indicators
-                                </strong>
-
-                                <span>
-                                    Display a clear outline around
-                                    focused controls.
-                                </span>
-
-                            </div>
-
-                            <label class="aura-switch">
-
-                                <input
-                                    type="checkbox"
-                                    id="focusIndicators"
-                                    checked
-                                >
-
-                                <span></span>
-
-                            </label>
-
-                        </div>
-
-
-                    </div>
-
-                </section>
-
-
-                <!-- VOICE TEST -->
-                <section class="accessibility-test">
-
-                    <div>
-
-                        <span class="accessibility-label">
-                            TEST
-                        </span>
-
-                        <h2>
-                            Test your accessibility settings
-                        </h2>
-
-                        <p>
-                            Use the controls below to check
-                            how AURA responds.
-                        </p>
-
-                    </div>
-
-
-                    <div class="accessibility-test-buttons">
-
-                        <button
-                            id="testSpeech"
-                            class="accessibility-test-button"
-                        >
-                            🔊 Test speech
-                        </button>
-
-                        <button
-                            id="testVoice"
-                            class="accessibility-test-button secondary"
-                        >
-                            🎙 Test microphone
-                        </button>
-
-                    </div>
-
-                </section>
-
-
-                <!-- SAVE -->
-                <section class="accessibility-save-area">
-
-                    <div>
-
-                        <strong>
-                            Accessibility preferences
-                        </strong>
-
-                        <p>
-                            Your preferences are stored
-                            locally for now. Backend
-                            synchronization will be added later.
-                        </p>
-
-                    </div>
-
-
-                    <button
-                        id="saveAccessibility"
-                        class="accessibility-save-button"
-                    >
-                        Save changes
-                    </button>
-
-                </section>
-
-
-            </section>
-
-        </main>
-
-    </div>
-`
-
-
-/* =========================================
-   ELEMENTS
-   ========================================= */
-
-const accessVoice =
-    document.querySelector('#accessVoice')
-
-const accessSpeech =
-    document.querySelector('#accessSpeech')
-
-const showCommands =
-    document.querySelector('#showCommands')
-
-const accessContrast =
-    document.querySelector('#accessContrast')
-
-const accessLargeText =
-    document.querySelector('#accessLargeText')
-
-const accessReducedMotion =
-    document.querySelector('#accessReducedMotion')
-
-const keyboardNavigation =
-    document.querySelector('#keyboardNavigation')
-
-const focusIndicators =
-    document.querySelector('#focusIndicators')
-
-const saveAccessibility =
-    document.querySelector('#saveAccessibility')
-
-const saveAccessibilityTop =
-    document.querySelector('#saveAccessibilityTop')
-
-
-/* =========================================
-   LOCAL STORAGE
-   ========================================= */
-
-const savedAccessibility =
-    JSON.parse(
-        localStorage.getItem(
-            'auraAccessibility'
-        ) || '{}'
-    )
-
-
-/* =========================================
-   LOAD SETTINGS
-   ========================================= */
-
-function loadAccessibilitySettings() {
-
-    const settings = [
-        'accessVoice',
-        'accessSpeech',
-        'showCommands',
-        'accessContrast',
-        'accessLargeText',
-        'accessReducedMotion',
-        'keyboardNavigation',
-        'focusIndicators'
-    ]
-
-
-    settings.forEach((id) => {
-
-        const element =
-            document.querySelector(`#${id}`)
-
-        if (
-            typeof savedAccessibility[id] ===
-            'boolean'
-        ) {
-
-            element.checked =
-                savedAccessibility[id]
-
-        }
-
-    })
-
-
-    applyAccessibilitySettings()
+  <div class="dashboard-page accessibility-dashboard">
+    <aside class="dashboard-sidebar">
+      <a class="dashboard-brand" href="/" aria-label="AURA home">
+        <span class="dashboard-brand-icon">A</span>
+        <span>AURA</span>
+      </a>
+
+      <nav class="dashboard-nav" aria-label="Main navigation">
+        <a href="/pages/dashboard.html">
+          <span>⌂</span> Dashboard
+        </a>
+        <a href="/pages/assistant.html">
+          <span>◉</span> Voice Assistant
+        </a>
+        <a href="/pages/accessibility.html" class="active" aria-current="page">
+          <span>♿</span> Accessibility
+        </a>
+        <a href="/pages/dashboard.html#activity">
+          <span>◷</span> Activity
+        </a>
+        <a href="/pages/settings.html">
+          <span>⚙</span> Settings
+        </a>
+      </nav>
+
+      <div class="dashboard-sidebar-bottom">
+        <a href="/pages/login.html">↪ Log in</a>
+      </div>
+    </aside>
+
+    <main class="dashboard-main accessibility-main">
+      <header class="dashboard-topbar">
+        <div>
+          <p class="eyebrow">AURA ACCESSIBILITY CENTER</p>
+          <h1>Make AURA work for you</h1>
+          <p>Adjust these preferences to make the website easier to use.</p>
+        </div>
+      </header>
+
+      <div class="accessibility-content">
+        <section class="feature-card">
+          <h2>Voice and speech</h2>
+          <p>Choose how AURA listens and responds.</p>
+
+          <label><input id="accessVoice" type="checkbox" checked> Enable voice commands</label>
+          <label><input id="accessSpeech" type="checkbox" checked> Enable spoken responses</label>
+          <label><input id="showCommands" type="checkbox" checked> Show suggested commands</label>
+
+          <div class="accessibility-actions">
+            <button id="testVoice" class="primary-button" type="button">Test microphone</button>
+            <button id="testSpeech" class="secondary-button" type="button">Test speech</button>
+            <button id="quickReadPage" class="secondary-button" type="button">Read this page</button>
+          </div>
+        </section>
+
+        <section class="feature-card">
+          <h2>Visual accessibility</h2>
+          <p>Make the interface easier to see and navigate.</p>
+
+          <label><input id="accessContrast" type="checkbox"> High contrast</label>
+          <label><input id="accessLargeText" type="checkbox"> Large text</label>
+          <label><input id="accessReducedMotion" type="checkbox"> Reduce motion</label>
+          <label><input id="keyboardNavigation" type="checkbox"> Enhanced keyboard navigation</label>
+          <label><input id="focusIndicators" type="checkbox"> Strong focus indicators</label>
+
+          <div class="accessibility-actions">
+            <button id="quickContrast" class="secondary-button" type="button">Toggle contrast</button>
+            <button id="quickLargeText" class="secondary-button" type="button">Toggle large text</button>
+          </div>
+        </section>
+
+        <section class="feature-card accessibility-save-card">
+          <div>
+            <h2>Save your preferences</h2>
+            <p>Your choices will be stored in this browser.</p>
+          </div>
+          <button id="saveAccessibility" class="primary-button" type="button">
+            Save settings
+          </button>
+          <p id="saveMessage" role="status" aria-live="polite"></p>
+        </section>
+      </div>
+    </main>
+  </div>
+`;
+
+
+const ids = [
+  "accessVoice",
+  "accessSpeech",
+  "showCommands",
+  "accessContrast",
+  "accessLargeText",
+  "accessReducedMotion",
+  "keyboardNavigation",
+  "focusIndicators"
+];
+
+const controls = Object.fromEntries(
+  ids.map(id => [id, document.getElementById(id)])
+);
+
+ids.forEach(id => {
+  if (typeof saved[id] === "boolean") {
+    controls[id].checked = saved[id];
+  }
+});
+
+function applySettings() {
+  document.body.classList.toggle(
+    "accessibility-high-contrast",
+    controls.accessContrast.checked
+  );
+  document.body.classList.toggle(
+    "accessibility-large-text",
+    controls.accessLargeText.checked
+  );
+  document.body.classList.toggle(
+    "accessibility-reduced-motion",
+    controls.accessReducedMotion.checked
+  );
+  document.body.classList.toggle(
+    "keyboard-navigation-enabled",
+    controls.keyboardNavigation.checked
+  );
+  document.body.classList.toggle(
+    "focus-indicators-enabled",
+    controls.focusIndicators.checked
+  );
 }
 
+function saveSettings(button) {
+  const settings = Object.fromEntries(
+    ids.map(id => [id, controls[id].checked])
+  );
 
-/* =========================================
-   APPLY SETTINGS
-   ========================================= */
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    applySettings();
 
-function applyAccessibilitySettings() {
+    const message = document.getElementById("saveMessage");
+    message.textContent = "✓ Your accessibility settings have been saved.";
 
-    document.body.classList.toggle(
-        'accessibility-high-contrast',
-        accessContrast.checked
-    )
-
-
-    document.body.classList.toggle(
-        'accessibility-large-text',
-        accessLargeText.checked
-    )
-
-
-    document.body.classList.toggle(
-        'accessibility-reduced-motion',
-        accessReducedMotion.checked
-    )
-
-
-    document.body.classList.toggle(
-        'keyboard-navigation-enabled',
-        keyboardNavigation.checked
-    )
-
-
-    document.body.classList.toggle(
-        'focus-indicators-enabled',
-        focusIndicators.checked
-    )
-}
-
-
-/* =========================================
-   SAVE SETTINGS
-   ========================================= */
-
-function saveSettings() {
-
-    const settings = {
-
-        accessVoice:
-            accessVoice.checked,
-
-        accessSpeech:
-            accessSpeech.checked,
-
-        showCommands:
-            showCommands.checked,
-
-        accessContrast:
-            accessContrast.checked,
-
-        accessLargeText:
-            accessLargeText.checked,
-
-        accessReducedMotion:
-            accessReducedMotion.checked,
-
-        keyboardNavigation:
-            keyboardNavigation.checked,
-
-        focusIndicators:
-            focusIndicators.checked
-
-    }
-
-
-    localStorage.setItem(
-        'auraAccessibility',
-        JSON.stringify(settings)
-    )
-
-
-    applyAccessibilitySettings()
-
-    showSavedMessage()
-}
-
-
-/* =========================================
-   SAVE MESSAGE
-   ========================================= */
-
-function showSavedMessage() {
-
-    const original =
-        saveAccessibility.textContent
-
-    saveAccessibility.textContent =
-        '✓ Saved'
-
-    saveAccessibility.classList.add(
-        'saved'
-    )
-
-
+    const original = button.textContent;
+    button.textContent = "✓ Saved";
     setTimeout(() => {
-
-        saveAccessibility.textContent =
-            original
-
-        saveAccessibility.classList.remove(
-            'saved'
-        )
-
-    }, 1800)
+      button.textContent = original;
+    }, 1800);
+  } catch (error) {
+    console.error("Unable to save accessibility settings:", error);
+    document.getElementById("saveMessage").textContent =
+      "Unable to save settings in this browser.";
+  }
 }
 
+document.getElementById("saveAccessibility").addEventListener(
+  "click", event => saveSettings(event.currentTarget)
+);
 
-/* =========================================
-   QUICK ACTIONS
-   ========================================= */
+[
+  "accessContrast",
+  "accessLargeText",
+  "accessReducedMotion",
+  "keyboardNavigation",
+  "focusIndicators"
+].forEach(id => {
+  controls[id].addEventListener("change", applySettings);
+});
 
-const quickReadPage =
-    document.querySelector('#quickReadPage')
+document.getElementById("quickContrast").addEventListener("click", () => {
+  controls.accessContrast.checked = !controls.accessContrast.checked;
+  applySettings();
+  saveSettings(document.getElementById("quickContrast"));
+});
 
-const quickContrast =
-    document.querySelector('#quickContrast')
+document.getElementById("quickLargeText").addEventListener("click", () => {
+  controls.accessLargeText.checked = !controls.accessLargeText.checked;
+  applySettings();
+  saveSettings(document.getElementById("quickLargeText"));
+});
 
-const quickLargeText =
-    document.querySelector('#quickLargeText')
+document.getElementById("testSpeech").addEventListener("click", () => {
+  if (!controls.accessSpeech.checked) {
+    alert("Enable spoken responses first.");
+    return;
+  }
 
+  if (!("speechSynthesis" in window)) {
+    alert("Speech synthesis is not supported in this browser.");
+    return;
+  }
 
-quickContrast.addEventListener(
-    'click',
-    () => {
-
-        accessContrast.checked =
-            !accessContrast.checked
-
-        applyAccessibilitySettings()
-
-    }
-)
-
-
-quickLargeText.addEventListener(
-    'click',
-    () => {
-
-        accessLargeText.checked =
-            !accessLargeText.checked
-
-        applyAccessibilitySettings()
-
-    }
-)
-
-
-/* =========================================
-   TEXT TO SPEECH
-   ========================================= */
-
-function speakPage() {
-
-    if (
-        !('speechSynthesis' in window)
-    ) {
-
-        alert(
-            'Text-to-speech is not supported by this browser.'
-        )
-
-        return
-
-    }
-
-
-    window.speechSynthesis.cancel()
-
-
-    const text =
-        document.querySelector(
-            '.accessibility-content'
-        ).innerText
-
-
-    const utterance =
-        new SpeechSynthesisUtterance(text)
-
-
-    utterance.rate = 0.9
-
-    utterance.pitch = 1
-
-    utterance.volume = 1
-
-
-    window.speechSynthesis.speak(
-        utterance
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(
+    new SpeechSynthesisUtterance(
+      "Hello. This is AURA. Your speech accessibility feature is working."
     )
-}
+  );
+});
 
+document.getElementById("quickReadPage").addEventListener("click", () => {
+  if (!controls.accessSpeech.checked) {
+    alert("Enable spoken responses first.");
+    return;
+  }
 
-quickReadPage.addEventListener(
-    'click',
-    speakPage
-)
+  const text = document.querySelector("main")?.innerText || "";
+  if (text && "speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+  }
+});
 
+document.getElementById("testVoice").addEventListener("click", async event => {
+  const button = event.currentTarget;
 
-/* =========================================
-   TEST SPEECH
-   ========================================= */
+  if (!navigator.mediaDevices?.getUserMedia) {
+    alert("Microphone access is not available in this browser.");
+    return;
+  }
 
-document
-    .querySelector('#testSpeech')
-    .addEventListener(
-        'click',
-        () => {
+  button.disabled = true;
+  button.textContent = "Checking microphone…";
 
-            if (
-                !('speechSynthesis' in window)
-            ) {
+  let stream;
 
-                alert(
-                    'Text-to-speech is not supported by this browser.'
-                )
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    alert("Microphone access is working.");
+  } catch (error) {
+    console.error("Microphone test failed:", error);
+    alert("Microphone access failed. Check your browser permissions.");
+  } finally {
+    stream?.getTracks().forEach(track => track.stop());
+    button.disabled = false;
+    button.textContent = "Test microphone";
+  }
+});
 
-                return
-
-            }
-
-
-            const speech =
-                new SpeechSynthesisUtterance(
-                    'Hello. This is AURA. Your speech accessibility feature is working.'
-                )
-
-
-            speech.rate = 0.9
-
-            speech.pitch = 1
-
-            speech.volume = 1
-
-
-            window.speechSynthesis.cancel()
-
-            window.speechSynthesis.speak(
-                speech
-            )
-
-        }
-    )
-
-
-/* =========================================
-   MICROPHONE TEST
-   ========================================= */
-
-document
-    .querySelector('#testVoice')
-    .addEventListener(
-        'click',
-        async () => {
-
-            if (
-                !navigator.mediaDevices ||
-                !navigator.mediaDevices.getUserMedia
-            ) {
-
-                alert(
-                    'Microphone access is not supported by this browser.'
-                )
-
-                return
-
-            }
-
-
-            try {
-
-                const stream =
-                    await navigator.mediaDevices
-                        .getUserMedia({
-                            audio: true
-                        })
-
-
-                stream
-                    .getTracks()
-                    .forEach(
-                        track =>
-                            track.stop()
-                    )
-
-
-                alert(
-                    'Microphone access is working.'
-                )
-
-            } catch (error) {
-
-                alert(
-                    'Microphone permission was not granted.'
-                )
-
-            }
-
-        }
-    )
-
-
-/* =========================================
-   LIVE ACCESSIBILITY
-   ========================================= */
-
-accessContrast.addEventListener(
-    'change',
-    applyAccessibilitySettings
-)
-
-
-accessLargeText.addEventListener(
-    'change',
-    applyAccessibilitySettings
-)
-
-
-accessReducedMotion.addEventListener(
-    'change',
-    applyAccessibilitySettings
-)
-
-
-keyboardNavigation.addEventListener(
-    'change',
-    applyAccessibilitySettings
-)
-
-
-focusIndicators.addEventListener(
-    'change',
-    applyAccessibilitySettings
-)
-
-
-/* =========================================
-   SAVE EVENTS
-   ========================================= */
-
-saveAccessibility.addEventListener(
-    'click',
-    saveSettings
-)
-
-
-saveAccessibilityTop.addEventListener(
-    'click',
-    saveSettings
-)
-
-
-/* =========================================
-   LOGOUT
-   ========================================= */
-
-document
-    .querySelector('#accessibilityLogout')
-    .addEventListener(
-        'click',
-        () => {
-
-            window.location.href =
-                '/pages/login.html'
-
-        }
-    )
-
-
-/* =========================================
-   INITIALIZE
-   ========================================= */
-
-loadAccessibilitySettings()
+applySettings();

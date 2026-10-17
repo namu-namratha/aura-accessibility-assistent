@@ -99,9 +99,18 @@ loginForm.addEventListener('submit', (event) => {
         return;
     }
 
-    // Demo only: this does not verify a real account.
+    // Demo login only: credentials are not verified.
+    // Read the previous details before updating the email.
+    const registeredEmail = sessionStorage.getItem('auraDemoEmail');
+    const registeredName = sessionStorage.getItem('auraDemoName');
+
     sessionStorage.setItem('auraDemoLoggedIn', 'true');
     sessionStorage.setItem('auraDemoEmail', email);
+
+    // Keep the name only when the email matches the saved demo details.
+    if (!registeredName || registeredEmail !== email) {
+        sessionStorage.removeItem('auraDemoName');
+    }
 
     alert('Demo login successful!');
     window.location.href = '/pages/dashboard.html';
@@ -120,5 +129,7 @@ backHome.addEventListener('click', () => {
 });
 
 forgotPassword.addEventListener('click', () => {
-    alert('Password recovery will be available after backend integration.');
+    alert(
+        'Password recovery will be available after backend integration.'
+    );
 });
