@@ -1,4 +1,3 @@
-
 import './style.css';
 
 const app = document.querySelector('#register-app');
@@ -28,48 +27,26 @@ app.innerHTML = `
                 <form id="registerForm">
                     <div class="form-group">
                         <label for="name">Full name</label>
-                        <input
-                            type="text"
-                            id="name"
-                            placeholder="Enter your full name"
-                            autocomplete="name"
-                            required
-                        >
+                        <input type="text" id="name" autocomplete="name"
+                            placeholder="Enter your full name" required>
                     </div>
 
                     <div class="form-group">
                         <label for="registerEmail">Email address</label>
-                        <input
-                            type="email"
-                            id="registerEmail"
-                            placeholder="you@example.com"
-                            autocomplete="email"
-                            required
-                        >
+                        <input type="email" id="registerEmail"
+                            autocomplete="email" placeholder="you@example.com" required>
                     </div>
 
                     <div class="form-group">
                         <label for="registerPassword">Password</label>
-                        <input
-                            type="password"
-                            id="registerPassword"
-                            placeholder="Create a password"
-                            autocomplete="new-password"
-                            minlength="6"
-                            required
-                        >
+                        <input type="password" id="registerPassword"
+                            autocomplete="new-password" minlength="8" required>
                     </div>
 
                     <div class="form-group">
                         <label for="confirmPassword">Confirm password</label>
-                        <input
-                            type="password"
-                            id="confirmPassword"
-                            placeholder="Confirm your password"
-                            autocomplete="new-password"
-                            minlength="6"
-                            required
-                        >
+                        <input type="password" id="confirmPassword"
+                            autocomplete="new-password" minlength="8" required>
                     </div>
 
                     <label class="remember-me">
@@ -80,6 +57,7 @@ app.innerHTML = `
                     <button type="submit" class="auth-submit">
                         Create account
                     </button>
+                    <p id="registerMessage" role="status" aria-live="polite"></p>
                 </form>
 
                 <p class="auth-switch">
@@ -97,8 +75,10 @@ app.innerHTML = `
 
 const registerForm = document.querySelector('#registerForm');
 const backHome = document.querySelector('#backHome');
+const registerMessage = document.querySelector('#registerMessage');
+const submitButton = registerForm.querySelector('button[type="submit"]');
 
-registerForm.addEventListener('submit', (event) => {
+registerForm.addEventListener('submit', async (event) => {
     event.preventDefault();
 
     const name = document.querySelector('#name').value.trim();
@@ -107,33 +87,49 @@ registerForm.addEventListener('submit', (event) => {
     const confirmPassword = document.querySelector('#confirmPassword').value;
     const terms = document.querySelector('#terms').checked;
 
-    if (!name || !email || !password || !confirmPassword) {
-        alert('Please complete all required fields.');
+    if (!name || !email || !password || !confirmPassword || !terms) {
+        registerMessage.textContent = 'Please complete all required fields.';
         return;
     }
 
-    if (password.length < 6) {
-        alert('Password must contain at least 6 characters.');
+    if (password.length < 8) {
+        registerMessage.textContent = 'Use a password with at least 8 characters.';
         return;
     }
 
     if (password !== confirmPassword) {
-        alert('Passwords do not match.');
+        registerMessage.textContent = 'Passwords do not match.';
         return;
     }
 
-    if (!terms) {
-        alert('Please accept the terms and conditions.');
-        return;
+    submitButton.disabled = true;
+    registerMessage.textContent = 'Creating your account...';
+
+    try {
+        const response = await fetch('http://localhost:5000/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Registration failed.');
+        }
+
+        registerMessage.textContent =
+            'Account created. Redirecting to sign in...';
+
+        window.location.href = '/pages/login.html';
+    } catch (error) {
+        registerMessage.textContent =
+            error.message === 'Failed to fetch'
+                ? 'Cannot reach AURA backend. Please try again.'
+                : error.message;
+    } finally {
+        submitButton.disabled = false;
     }
-
-    // Demo only: do not save the password in browser storage.
-    sessionStorage.setItem('auraDemoLoggedIn', 'true');
-    sessionStorage.setItem('auraDemoEmail', email);
-    sessionStorage.setItem('auraDemoName', name);
-
-    alert(`Welcome to AURA, ${name}!`);
-    window.location.href = '/pages/dashboard.html';
 });
 
 backHome.addEventListener('click', () => {
