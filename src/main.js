@@ -1,3 +1,9 @@
+import { FilesetResolver, HandLandmarker } from "@mediapipe/tasks-vision";
+
+/* =========================================
+   AURA CONFIGURATION
+========================================= */
+
 const STORAGE_KEYS = {
     profile: "aura_profile_v2",
     settings: "aura_settings_v2",
@@ -31,39 +37,83 @@ const PAGE_TITLES = {
     settings: "Settings"
 };
 
+const MEDIAPIPE_WASM_URL =
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.1.1/wasm";
+
+const MEDIAPIPE_MODEL_URL =
+    "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
+
 const state = {
     currentPage: "dashboard",
     recognition: null,
     listening: false,
+
     cameraStream: null,
-    cameraActive: false
+    cameraActive: false,
+
+    handLandmarker: null,
+    handLandmarkerPromise: null,
+
+    gestureAnimationFrame: null,
+    lastGesture: "No hand detected",
+    lastVideoTime: -1,
+
+    cameraStarting: false
 };
+
+/* =========================================
+   STORAGE
+========================================= */
 
 function readStorage(key, fallback) {
     try {
         const value = localStorage.getItem(key);
-        return value ? JSON.parse(value) : structuredClone(fallback);
+
+        return value
+            ? JSON.parse(value)
+            : structuredClone(fallback);
     } catch (error) {
         console.error("Could not read saved data:", error);
         return structuredClone(fallback);
     }
 }
 
-const profile = readStorage(STORAGE_KEYS.profile, DEFAULT_PROFILE);
-const settings = readStorage(STORAGE_KEYS.settings, DEFAULT_SETTINGS);
+const profile = {
+    ...DEFAULT_PROFILE,
+    ...readStorage(STORAGE_KEYS.profile, DEFAULT_PROFILE)
+};
+
+const settings = {
+    ...DEFAULT_SETTINGS,
+    ...readStorage(STORAGE_KEYS.settings, DEFAULT_SETTINGS)
+};
+
 const activity = readStorage(STORAGE_KEYS.activity, []);
 
 function saveProfile() {
-    localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify(profile));
+    localStorage.setItem(
+        STORAGE_KEYS.profile,
+        JSON.stringify(profile)
+    );
 }
 
 function saveSettings() {
-    localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(settings));
+    localStorage.setItem(
+        STORAGE_KEYS.settings,
+        JSON.stringify(settings)
+    );
 }
 
 function saveActivity() {
-    localStorage.setItem(STORAGE_KEYS.activity, JSON.stringify(activity));
+    localStorage.setItem(
+        STORAGE_KEYS.activity,
+        JSON.stringify(activity)
+    );
 }
+
+/* =========================================
+   GENERAL UTILITIES
+========================================= */
 
 function escapeHTML(value) {
     return String(value ?? "").replace(/[&<>"']/g, character => ({
@@ -81,6 +131,7 @@ function showToast(message, type = "info") {
     if (!container) return;
 
     const toast = document.createElement("div");
+
     toast.className = `toast toast-${type}`;
     toast.textContent = message;
 
@@ -106,6 +157,7 @@ function logActivity(title, description = "") {
     });
 
     activity.splice(100);
+
     saveActivity();
 }
 
@@ -130,7 +182,8 @@ function applySettings() {
         `${Number(settings.fontSize) || 16}px`
     );
 
-    document.body.dataset.theme = settings.darkMode ? "dark" : "light";
+    document.body.dataset.theme =
+        settings.darkMode ? "dark" : "light";
 }
 
 function updateUserDetails() {
@@ -140,8 +193,13 @@ function updateUserDetails() {
     const nameElement = document.getElementById("sidebarUserName");
     const avatarElement = document.getElementById("sidebarAvatar");
 
-    if (nameElement) nameElement.textContent = name;
-    if (avatarElement) avatarElement.textContent = initial;
+    if (nameElement) {
+        nameElement.textContent = name;
+    }
+
+    if (avatarElement) {
+        avatarElement.textContent = initial;
+    }
 }
 
 function updateDate() {
@@ -157,30 +215,52 @@ function updateDate() {
     }).format(new Date());
 }
 
+/* =========================================
+   PAGE NAVIGATION
+========================================= */
+
 function setPage(page) {
     if (!PAGE_TITLES[page]) {
         page = "dashboard";
     }
 
     stopListening();
+
+    // Release the camera when leaving Gesture Controls.
+    if (state.currentPage === "gestures" && page !== "gestures") {
+        stopCamera();
+    }
+
     state.currentPage = page;
 
     document.querySelectorAll(".nav-item").forEach(button => {
-        button.classList.toggle("active", button.dataset.page === page);
+        button.classList.toggle(
+            "active",
+            button.dataset.page === page
+        );
     });
 
     const title = PAGE_TITLES[page];
 
-    document.getElementById("pageTitle").textContent = title;
-    document.getElementById("breadcrumbPage").textContent = title;
+    const pageTitle = document.getElementById("pageTitle");
+    const breadcrumbPage = document.getElementById("breadcrumbPage");
+    const sidebar = document.getElementById("sidebar");
 
-    document.getElementById("sidebar").classList.remove("sidebar-open");
+    if (pageTitle) pageTitle.textContent = title;
+
+    if (breadcrumbPage) breadcrumbPage.textContent = title;
+
+    if (sidebar) {
+        sidebar.classList.remove("sidebar-open");
+    }
 
     renderPage(page);
 }
 
 function renderPage(page) {
     const container = document.getElementById("pageContent");
+
+    if (!container) return;
 
     const pages = {
         dashboard: renderDashboard,
@@ -194,8 +274,13 @@ function renderPage(page) {
     };
 
     container.innerHTML = pages[page]();
+
     attachPageEvents(page);
 }
+
+/* =========================================
+   DASHBOARD
+========================================= */
 
 function renderDashboard() {
     const today = new Date();
@@ -260,7 +345,7 @@ function renderDashboard() {
             <button class="feature-card" data-go="gestures">
                 <div class="feature-icon pink">☝</div>
                 <h3>Gesture Controls</h3>
-                <p>Preview your camera for future gesture controls.</p>
+                <p>Detect your hand and display estimated finger positions.</p>
                 <span class="feature-link">Open controls →</span>
             </button>
 
@@ -309,6 +394,10 @@ function renderDashboard() {
     `;
 }
 
+/* =========================================
+   AI ASSISTANT
+========================================= */
+
 function renderAssistant() {
     return `
         <section class="page-intro">
@@ -326,7 +415,9 @@ function renderAssistant() {
                     <p><span class="status-dot"></span> Local assistant active</p>
                 </div>
 
-                <button class="secondary-button" id="clearChat">Clear chat</button>
+                <button class="secondary-button" id="clearChat">
+                    Clear chat
+                </button>
             </div>
 
             <div class="chat-messages" id="chatMessages" aria-live="polite">
@@ -380,6 +471,10 @@ function renderAssistant() {
         </section>
     `;
 }
+
+/* =========================================
+   VOICE ASSISTANT
+========================================= */
 
 function renderVoiceAssistant() {
     const supported = Boolean(
@@ -461,27 +556,46 @@ function renderVoiceAssistant() {
     `;
 }
 
+/* =========================================
+   GESTURE CONTROLS
+========================================= */
+
 function renderGestures() {
     return `
         <section class="page-intro">
             <span class="eyebrow">CAMERA INTERACTION</span>
             <h1>Gesture Controls</h1>
-            <p>Check camera access before adding gesture recognition.</p>
+            <p>
+                Enable your camera to detect a hand using the
+                MediaPipe hand landmark model.
+            </p>
         </section>
 
         <section class="gesture-layout">
             <div class="panel camera-panel">
                 <div class="camera-frame" id="cameraFrame">
-                    <video id="cameraVideo" autoplay playsinline muted hidden></video>
+                    <video
+                        id="cameraVideo"
+                        autoplay
+                        playsinline
+                        muted
+                        hidden
+                    ></video>
 
                     <div class="camera-placeholder" id="cameraPlaceholder">
                         <div class="camera-placeholder-icon">▣</div>
                         <h3>Camera preview</h3>
-                        <p>Your camera preview will appear here after permission is granted.</p>
+                        <p>
+                            Enable the camera to start hand detection.
+                        </p>
                     </div>
 
                     <div class="camera-status">
-                        <span class="status-dot" id="cameraStatusDot"></span>
+                        <span
+                            class="status-dot"
+                            id="cameraStatusDot"
+                        ></span>
+
                         <span id="cameraStatusText">Camera off</span>
                     </div>
                 </div>
@@ -491,43 +605,79 @@ function renderGestures() {
                         Enable camera
                     </button>
 
-                    <button class="secondary-button" id="cameraStop" disabled>
+                    <button
+                        class="secondary-button"
+                        id="cameraStop"
+                        disabled
+                    >
                         Stop camera
                     </button>
                 </div>
             </div>
 
             <div class="panel gesture-info-panel">
-                <span class="eyebrow">GESTURE MODULE</span>
+                <span class="eyebrow">MEDIAPIPE HAND LANDMARKER</span>
                 <h3>Recognition status</h3>
 
                 <div class="status-card">
-                    <span class="status-indicator"></span>
+                    <span
+                        class="status-indicator"
+                        id="gestureStatusIndicator"
+                    ></span>
 
                     <div>
-                        <strong>Camera preview only</strong>
-                        <p>No gesture model is connected yet.</p>
+                        <strong id="gestureResultText">Camera is off</strong>
+
+                        <p id="gestureDescription">
+                            Enable the camera to initialize hand detection.
+                        </p>
                     </div>
                 </div>
 
-                <h3>Planned controls</h3>
+                <h3>Finger detection</h3>
+
+                <div class="info-row">
+                    <span>Index finger</span>
+                    <strong id="indexFingerStatus">—</strong>
+                </div>
+
+                <div class="info-row">
+                    <span>Middle finger</span>
+                    <strong id="middleFingerStatus">—</strong>
+                </div>
+
+                <div class="info-row">
+                    <span>Ring finger</span>
+                    <strong id="ringFingerStatus">—</strong>
+                </div>
+
+                <div class="info-row">
+                    <span>Little finger</span>
+                    <strong id="littleFingerStatus">—</strong>
+                </div>
+
+                <h3>How to test</h3>
 
                 <ul class="check-list">
-                    <li>Hand gesture navigation</li>
-                    <li>Gesture-based interaction</li>
-                    <li>Accessibility-friendly alternatives</li>
-                    <li>Visual feedback for detected gestures</li>
+                    <li>Place one hand in front of the camera.</li>
+                    <li>Keep your fingers visible.</li>
+                    <li>Try raising and lowering individual fingers.</li>
+                    <li>Watch the recognition status update.</li>
                 </ul>
 
                 <div class="notice notice-warning">
-                    Enabling the camera does not detect or recognize gestures.
-                    Gesture recognition requires a separate computer-vision
-                    model and implementation.
+                    Finger positions are estimated from hand landmarks.
+                    This is a basic detector, not a complete sign-language
+                    recognition system.
                 </div>
             </div>
         </section>
     `;
 }
+
+/* =========================================
+   ACCESSIBILITY
+========================================= */
 
 function renderAccessibility() {
     return `
@@ -601,7 +751,9 @@ function renderAccessibility() {
                     </div>
 
                     <label for="speechRate">
-                        <span id="speechRateValue">${Number(settings.speechRate).toFixed(1)}×</span>
+                        <span id="speechRateValue">
+                            ${Number(settings.speechRate).toFixed(1)}×
+                        </span>
                     </label>
 
                     <input
@@ -636,7 +788,9 @@ function renderAccessibility() {
                     </div>
 
                     <label for="fontSize">
-                        <span id="fontSizeValue">${Number(settings.fontSize)}px</span>
+                        <span id="fontSizeValue">
+                            ${Number(settings.fontSize)}px
+                        </span>
                     </label>
 
                     <input
@@ -649,13 +803,20 @@ function renderAccessibility() {
                     >
                 </div>
 
-                <button class="secondary-button full-width" id="resetAccessibility">
+                <button
+                    class="secondary-button full-width"
+                    id="resetAccessibility"
+                >
                     Reset accessibility preferences
                 </button>
             </div>
         </section>
     `;
 }
+
+/* =========================================
+   ACTIVITY
+========================================= */
 
 function renderActivity() {
     return `
@@ -699,6 +860,10 @@ function renderActivity() {
     `;
 }
 
+/* =========================================
+   PROFILE
+========================================= */
+
 function renderProfile() {
     return `
         <section class="page-intro">
@@ -710,7 +875,9 @@ function renderProfile() {
         <section class="panel profile-panel">
             <div class="profile-heading">
                 <div class="profile-avatar-large">
-                    ${escapeHTML((profile.name || "U").trim().charAt(0).toUpperCase())}
+                    ${escapeHTML(
+                        (profile.name || "U").trim().charAt(0).toUpperCase()
+                    )}
                 </div>
 
                 <div>
@@ -748,15 +915,24 @@ function renderProfile() {
                     <label for="preferredMode">Preferred interaction mode</label>
 
                     <select id="preferredMode">
-                        <option value="standard" ${profile.preferredMode === "standard" ? "selected" : ""}>
+                        <option
+                            value="standard"
+                            ${profile.preferredMode === "standard" ? "selected" : ""}
+                        >
                             Standard
                         </option>
 
-                        <option value="voice" ${profile.preferredMode === "voice" ? "selected" : ""}>
+                        <option
+                            value="voice"
+                            ${profile.preferredMode === "voice" ? "selected" : ""}
+                        >
                             Voice
                         </option>
 
-                        <option value="visual" ${profile.preferredMode === "visual" ? "selected" : ""}>
+                        <option
+                            value="visual"
+                            ${profile.preferredMode === "visual" ? "selected" : ""}
+                        >
                             Visual accessibility
                         </option>
                     </select>
@@ -776,6 +952,10 @@ function renderProfile() {
         </section>
     `;
 }
+
+/* =========================================
+   SETTINGS
+========================================= */
 
 function renderSettings() {
     return `
@@ -877,6 +1057,10 @@ function renderSettings() {
     `;
 }
 
+/* =========================================
+   SHARED COMPONENTS
+========================================= */
+
 function toggleRow(key, title, description, checked) {
     return `
         <div class="toggle-row">
@@ -921,6 +1105,10 @@ function formatDate(value) {
     });
 }
 
+/* =========================================
+   PAGE EVENT ROUTING
+========================================= */
+
 function attachPageEvents(page) {
     document.querySelectorAll("[data-go]").forEach(button => {
         button.addEventListener("click", () => {
@@ -953,7 +1141,9 @@ function attachPageEvents(page) {
     }
 }
 
-/* Local assistant responses */
+/* =========================================
+   LOCAL ASSISTANT RESPONSES
+========================================= */
 
 function getLocalAssistantResponse(message) {
     const text = message.toLowerCase().trim();
@@ -967,7 +1157,7 @@ function getLocalAssistantResponse(message) {
         text.includes("your features") ||
         text.includes("help me")
     ) {
-        return "This demonstration includes a dashboard, local assistant responses, browser speech recognition, spoken responses, a camera preview, accessibility preferences, a local profile, and activity history. A live AI model, secure account system, database, and gesture-recognition model are not connected yet.";
+        return "This demonstration includes a dashboard, local assistant responses, browser speech recognition, spoken responses, MediaPipe hand detection, accessibility preferences, a local profile, and activity history. A live AI model, secure account system, and database are not connected yet.";
     }
 
     if (text.includes("accessibility") || text.includes("contrast") || text.includes("font size")) {
@@ -978,8 +1168,8 @@ function getLocalAssistantResponse(message) {
         return "Open Voice Assistant. Press Start listening and allow microphone permission if requested. Your browser must support speech recognition. You can also enable spoken responses in Accessibility settings.";
     }
 
-    if (text.includes("gesture") || text.includes("camera")) {
-        return "Open Gesture Controls and press Enable camera to preview your camera. This page does not recognize gestures yet; a computer-vision model must be added for that functionality.";
+    if (text.includes("gesture") || text.includes("camera") || text.includes("hand detection")) {
+        return "Open Gesture Controls and press Enable camera. AURA will use MediaPipe to detect hand landmarks and estimate which fingers are raised. The basic detector does not interpret sign language.";
     }
 
     if (text.includes("profile") || text.includes("my name")) {
@@ -1015,9 +1205,12 @@ function appendChatMessage(message, sender) {
     if (!container) return;
 
     const row = document.createElement("div");
-    row.className = `message ${sender === "user" ? "user-message" : "assistant-message"}`;
+
+    row.className =
+        `message ${sender === "user" ? "user-message" : "assistant-message"}`;
 
     const avatar = document.createElement("div");
+
     avatar.className = "message-avatar";
     avatar.textContent = sender === "user"
         ? (profile.name || "U").trim().charAt(0).toUpperCase()
@@ -1034,8 +1227,8 @@ function appendChatMessage(message, sender) {
 
     body.append(label, paragraph);
     row.append(avatar, body);
-    container.appendChild(row);
 
+    container.appendChild(row);
     container.scrollTop = container.scrollHeight;
 }
 
@@ -1049,6 +1242,11 @@ function sendChatMessage(message) {
     const response = getLocalAssistantResponse(cleanMessage);
 
     window.setTimeout(() => {
+        // Avoid writing into a chat that has been cleared or navigated away from.
+        const container = document.getElementById("chatMessages");
+
+        if (!container) return;
+
         appendChatMessage(response, "assistant");
 
         if (settings.voiceEnabled) {
@@ -1064,10 +1262,13 @@ function attachChatEvents() {
     const input = document.getElementById("chatInput");
     const clearButton = document.getElementById("clearChat");
 
+    if (!form || !input || !clearButton) return;
+
     form.addEventListener("submit", event => {
         event.preventDefault();
 
         const message = input.value;
+
         input.value = "";
 
         sendChatMessage(message);
@@ -1080,44 +1281,65 @@ function attachChatEvents() {
     });
 
     clearButton.addEventListener("click", () => {
-        document.getElementById("chatMessages").innerHTML = "";
+        const messages = document.getElementById("chatMessages");
+
+        if (messages) {
+            messages.innerHTML = "";
+        }
+
         showToast("Conversation cleared.");
     });
 }
 
-/* Browser speech synthesis */
+/* =========================================
+   BROWSER SPEECH SYNTHESIS
+========================================= */
 
 function speakText(text) {
     if (!settings.voiceEnabled) return;
 
     if (!("speechSynthesis" in window)) {
-        showToast("Speech synthesis is not supported in this browser.", "error");
+        showToast(
+            "Speech synthesis is not supported in this browser.",
+            "error"
+        );
+
         return;
     }
 
     window.speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(String(text));
+
     utterance.rate = Number(settings.speechRate) || 1;
 
     window.speechSynthesis.speak(utterance);
 }
 
-/* Browser speech recognition */
+/* =========================================
+   BROWSER SPEECH RECOGNITION
+========================================= */
 
 function attachVoiceEvents() {
     const startButton = document.getElementById("voiceStart");
     const stopButton = document.getElementById("voiceStop");
+
+    if (!startButton || !stopButton) return;
 
     startButton.addEventListener("click", startListening);
     stopButton.addEventListener("click", stopListening);
 }
 
 function startListening() {
-    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const Recognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!Recognition) {
-        showToast("Speech recognition is not supported in this browser.", "error");
+        showToast(
+            "Speech recognition is not supported in this browser.",
+            "error"
+        );
+
         return;
     }
 
@@ -1132,27 +1354,48 @@ function startListening() {
     recognition.onstart = () => {
         state.listening = true;
 
-        document.getElementById("voiceStatus").textContent = "Listening...";
-        document.getElementById("voiceDescription").textContent =
-            "Speak clearly. AURA will process the recognized words.";
+        const status = document.getElementById("voiceStatus");
+        const description = document.getElementById("voiceDescription");
+        const start = document.getElementById("voiceStart");
+        const stop = document.getElementById("voiceStop");
+        const orb = document.getElementById("voiceOrb");
 
-        document.getElementById("voiceStart").hidden = true;
-        document.getElementById("voiceStop").hidden = false;
+        if (status) status.textContent = "Listening...";
 
-        document.getElementById("voiceOrb").classList.add("voice-orb-active");
+        if (description) {
+            description.textContent =
+                "Speak clearly. AURA will process the recognized words.";
+        }
+
+        if (start) start.hidden = true;
+        if (stop) stop.hidden = false;
+
+        if (orb) orb.classList.add("voice-orb-active");
     };
 
     recognition.onresult = event => {
         const transcript = event.results[0][0].transcript;
 
-        document.getElementById("voiceTranscript").textContent = transcript;
+        const transcriptElement =
+            document.getElementById("voiceTranscript");
+
+        if (transcriptElement) {
+            transcriptElement.textContent = transcript;
+        }
 
         const response = getLocalAssistantResponse(transcript);
 
-        document.getElementById("voiceStatus").textContent = "Response ready";
-        document.getElementById("voiceDescription").textContent = response;
+        const status = document.getElementById("voiceStatus");
+        const description = document.getElementById("voiceDescription");
 
-        logActivity("Used Voice Assistant", transcript.slice(0, 100));
+        if (status) status.textContent = "Response ready";
+
+        if (description) description.textContent = response;
+
+        logActivity(
+            "Used Voice Assistant",
+            transcript.slice(0, 100)
+        );
 
         if (settings.voiceEnabled) {
             speakText(response);
@@ -1202,12 +1445,16 @@ function startListening() {
         if (status) status.textContent = "Ready to listen";
 
         if (description) {
-            description.textContent = "Press the microphone button to speak again.";
+            description.textContent =
+                "Press the microphone button to speak again.";
         }
 
         if (start) start.hidden = false;
         if (stop) stop.hidden = true;
-        if (orb) orb.classList.remove("voice-orb-active");
+
+        if (orb) {
+            orb.classList.remove("voice-orb-active");
+        }
     };
 
     state.recognition = recognition;
@@ -1216,7 +1463,11 @@ function startListening() {
         recognition.start();
     } catch (error) {
         console.error(error);
-        showToast("Could not start speech recognition. Please try again.", "error");
+
+        showToast(
+            "Could not start speech recognition. Please try again.",
+            "error"
+        );
     }
 }
 
@@ -1233,74 +1484,518 @@ function stopListening() {
     state.listening = false;
 }
 
-/* Camera preview only */
+/* =========================================
+   MEDIAPIPE INITIALIZATION
+========================================= */
 
-function attachCameraEvents() {
-    document.getElementById("cameraStart").addEventListener("click", startCamera);
-    document.getElementById("cameraStop").addEventListener("click", stopCamera);
+async function initializeHandLandmarker() {
+    if (state.handLandmarker) {
+        return state.handLandmarker;
+    }
+
+    // Reuse the same promise if initialization is already underway.
+    if (state.handLandmarkerPromise) {
+        return state.handLandmarkerPromise;
+    }
+
+    state.handLandmarkerPromise = (async () => {
+        const vision = await FilesetResolver.forVisionTasks(
+            MEDIAPIPE_WASM_URL
+        );
+
+        const landmarker = await HandLandmarker.createFromOptions(
+            vision,
+            {
+                baseOptions: {
+                    modelAssetPath: MEDIAPIPE_MODEL_URL,
+                    delegate: "CPU"
+                },
+
+                runningMode: "VIDEO",
+                numHands: 1,
+                minHandDetectionConfidence: 0.5,
+                minHandPresenceConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            }
+        );
+
+        state.handLandmarker = landmarker;
+
+        return landmarker;
+    })();
+
+    try {
+        return await state.handLandmarkerPromise;
+    } catch (error) {
+        state.handLandmarkerPromise = null;
+
+        throw error;
+    }
 }
 
+/* =========================================
+   CAMERA EVENT HANDLERS
+========================================= */
+
+function attachCameraEvents() {
+    const startButton = document.getElementById("cameraStart");
+    const stopButton = document.getElementById("cameraStop");
+
+    if (!startButton || !stopButton) return;
+
+    startButton.addEventListener("click", startCamera);
+    stopButton.addEventListener("click", stopCamera);
+}
+
+/* =========================================
+   START CAMERA AND HAND DETECTION
+========================================= */
+
 async function startCamera() {
-    if (!navigator.mediaDevices?.getUserMedia) {
-        showToast("Camera access is not supported by this browser.", "error");
+    if (state.cameraActive || state.cameraStarting) {
         return;
     }
 
+    if (!navigator.mediaDevices?.getUserMedia) {
+        showToast(
+            "Camera access is not supported. Use localhost or HTTPS in a compatible browser.",
+            "error"
+        );
+
+        return;
+    }
+
+    state.cameraStarting = true;
+
+    const startButton = document.getElementById("cameraStart");
+    const stopButton = document.getElementById("cameraStop");
+    const statusText = document.getElementById("cameraStatusText");
+    const resultText = document.getElementById("gestureResultText");
+    const description = document.getElementById("gestureDescription");
+
+    if (startButton) {
+        startButton.disabled = true;
+        startButton.textContent = "Starting camera...";
+    }
+
+    if (statusText) {
+        statusText.textContent = "Requesting camera access...";
+    }
+
+    if (resultText) {
+        resultText.textContent = "Initializing";
+    }
+
+    if (description) {
+        description.textContent =
+            "Loading the hand detection model and requesting camera access.";
+    }
+
+    let stream = null;
+
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
+        // Load MediaPipe before starting the video detection loop.
+        const landmarker = await initializeHandLandmarker();
+
+        // The user might have navigated away during model loading.
+        if (state.currentPage !== "gestures") {
+            return;
+        }
+
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: "user",
+                width: { ideal: 640 },
+                height: { ideal: 480 }
+            },
             audio: false
         });
 
-        state.cameraStream = stream;
-        state.cameraActive = true;
+        // The user might have navigated away during the permission prompt.
+        if (state.currentPage !== "gestures") {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+            return;
+        }
 
         const video = document.getElementById("cameraVideo");
+
+        if (!video) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+            return;
+        }
+
+        state.cameraStream = stream;
+        state.cameraActive = true;
+        state.lastVideoTime = -1;
+        state.lastGesture = "No hand detected";
 
         video.srcObject = stream;
         video.hidden = false;
 
-        document.getElementById("cameraPlaceholder").hidden = true;
-        document.getElementById("cameraStart").disabled = true;
-        document.getElementById("cameraStop").disabled = false;
-        document.getElementById("cameraStatusText").textContent = "Camera active";
+        await video.play();
 
-        logActivity("Enabled camera preview", "Gesture controls camera preview.");
-        showToast("Camera preview enabled.");
+        const placeholder =
+            document.getElementById("cameraPlaceholder");
+
+        if (placeholder) {
+            placeholder.hidden = true;
+        }
+
+        if (startButton) {
+            startButton.disabled = true;
+            startButton.textContent = "Camera enabled";
+        }
+
+        if (stopButton) {
+            stopButton.disabled = false;
+        }
+
+        if (statusText) {
+            statusText.textContent = "Camera active · Detecting hands";
+        }
+
+        if (resultText) {
+            resultText.textContent = "Looking for a hand...";
+        }
+
+        if (description) {
+            description.textContent =
+                "Place one hand inside the camera frame.";
+        }
+
+        updateGestureStatus("Looking for a hand...");
+
+        logActivity(
+            "Started gesture recognition",
+            "Enabled camera and MediaPipe hand detection."
+        );
+
+        showToast("Camera enabled. Show your hand to begin detection.");
+
+        detectHandFrame(video, landmarker);
     } catch (error) {
-        console.error(error);
+        console.error("Camera or MediaPipe initialization failed:", error);
+
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+
+        state.cameraStream = null;
+        state.cameraActive = false;
+
+        resetFingerStatuses();
+
+        if (statusText) {
+            statusText.textContent = "Camera unavailable";
+        }
+
+        if (resultText) {
+            resultText.textContent = "Could not start detection";
+        }
+
+        if (description) {
+            description.textContent =
+                "Check your camera permissions and internet connection, then try again.";
+        }
 
         showToast(
-            "Camera access failed. Check permissions and try again.",
+            "Could not start gesture recognition. Check camera permission and internet access.",
             "error"
         );
+    } finally {
+        state.cameraStarting = false;
+
+        if (startButton) {
+            startButton.disabled = state.cameraActive;
+            startButton.textContent = state.cameraActive
+                ? "Camera enabled"
+                : "Enable camera";
+        }
+
+        if (stopButton) {
+            stopButton.disabled = !state.cameraActive;
+        }
     }
 }
 
+/* =========================================
+   PROCESS CAMERA FRAMES
+========================================= */
+
+function detectHandFrame(video, landmarker) {
+    if (!state.cameraActive) return;
+
+    if (
+        !video ||
+        video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA
+    ) {
+        state.gestureAnimationFrame =
+            requestAnimationFrame(() => {
+                detectHandFrame(video, landmarker);
+            });
+
+        return;
+    }
+
+    try {
+        // Process each new frame only once.
+        if (video.currentTime !== state.lastVideoTime) {
+            state.lastVideoTime = video.currentTime;
+
+            const results = landmarker.detectForVideo(
+                video,
+                performance.now()
+            );
+
+            processHandResults(results);
+        }
+    } catch (error) {
+        console.error("Hand detection frame failed:", error);
+
+        updateGestureStatus("Detection error");
+
+        return;
+    }
+
+    if (state.cameraActive) {
+        state.gestureAnimationFrame =
+            requestAnimationFrame(() => {
+                detectHandFrame(video, landmarker);
+            });
+    }
+}
+
+/* =========================================
+   PROCESS MEDIAPIPE LANDMARKS
+========================================= */
+
+function processHandResults(results) {
+    const hands = results?.landmarks;
+
+    if (!hands || hands.length === 0) {
+        state.lastGesture = "No hand detected";
+
+        updateGestureStatus("No hand detected");
+        resetFingerStatuses();
+
+        return;
+    }
+
+    const landmarks = hands[0];
+
+    /*
+      MediaPipe returns 21 landmarks per detected hand.
+
+      Finger tip and joint landmark indexes:
+      Index:  8 tip, 6 joint
+      Middle: 12 tip, 10 joint
+      Ring:   16 tip, 14 joint
+      Little: 20 tip, 18 joint
+
+      These comparisons provide a basic estimate of
+      whether each finger is extended.
+    */
+
+    const fingerResults = {
+        index: isFingerExtended(landmarks, 8, 6),
+        middle: isFingerExtended(landmarks, 12, 10),
+        ring: isFingerExtended(landmarks, 16, 14),
+        little: isFingerExtended(landmarks, 20, 18)
+    };
+
+    updateFingerStatus("indexFingerStatus", fingerResults.index);
+    updateFingerStatus("middleFingerStatus", fingerResults.middle);
+    updateFingerStatus("ringFingerStatus", fingerResults.ring);
+    updateFingerStatus("littleFingerStatus", fingerResults.little);
+
+    const raisedFingers = Object.values(fingerResults)
+        .filter(Boolean).length;
+
+    let gesture = "Hand detected";
+
+    if (raisedFingers === 0) {
+        gesture = "Closed fingers detected";
+    } else if (raisedFingers === 4) {
+        gesture = "Open hand detected";
+    } else {
+        gesture = `${raisedFingers} finger${raisedFingers === 1 ? "" : "s"} raised`;
+    }
+
+    state.lastGesture = gesture;
+
+    updateGestureStatus(gesture);
+}
+
+/*
+  This is a simple geometric heuristic.
+
+  It works best when the palm is reasonably visible and
+  the fingers are oriented approximately upward in the
+  camera image. It is not a robust classifier for every
+  hand orientation.
+*/
+
+function isFingerExtended(landmarks, tipIndex, jointIndex) {
+    const tip = landmarks[tipIndex];
+    const joint = landmarks[jointIndex];
+    const pip = landmarks[jointIndex - 1];
+    const wrist = landmarks[0];
+
+    if (!tip || !joint || !pip || !wrist) {
+        return false;
+    }
+
+    // Compare the fingertip and joints relative to the wrist.
+    // This is still a heuristic, but avoids relying on one
+    // comparison alone.
+    const tipDistance = Math.hypot(
+        tip.x - wrist.x,
+        tip.y - wrist.y,
+        tip.z - wrist.z
+    );
+
+    const jointDistance = Math.hypot(
+        joint.x - wrist.x,
+        joint.y - wrist.y,
+        joint.z - wrist.z
+    );
+
+    const pipDistance = Math.hypot(
+        pip.x - wrist.x,
+        pip.y - wrist.y,
+        pip.z - wrist.z
+    );
+
+    return (
+        tipDistance > jointDistance &&
+        tipDistance > pipDistance
+    );
+}
+
+/* =========================================
+   UPDATE GESTURE UI
+========================================= */
+
+function updateFingerStatus(elementId, isRaised) {
+    const element = document.getElementById(elementId);
+
+    if (!element) return;
+
+    element.textContent = isRaised ? "Raised" : "Lowered";
+}
+
+function resetFingerStatuses() {
+    [
+        "indexFingerStatus",
+        "middleFingerStatus",
+        "ringFingerStatus",
+        "littleFingerStatus"
+    ].forEach(id => {
+        const element = document.getElementById(id);
+
+        if (element) {
+            element.textContent = "—";
+        }
+    });
+}
+
+function updateGestureStatus(message) {
+    const resultText = document.getElementById("gestureResultText");
+    const description = document.getElementById("gestureDescription");
+    const indicator = document.getElementById("gestureStatusIndicator");
+
+    if (resultText) {
+        resultText.textContent = message;
+    }
+
+    if (description) {
+        description.textContent = state.cameraActive
+            ? "MediaPipe is analyzing the camera feed."
+            : "Enable the camera to start hand detection.";
+    }
+
+    if (indicator) {
+        indicator.classList.toggle("gesture-detected", state.cameraActive);
+    }
+}
+
+/* =========================================
+   STOP CAMERA AND DETECTION
+========================================= */
+
 function stopCamera() {
+    state.cameraActive = false;
+
+    if (state.gestureAnimationFrame !== null) {
+        cancelAnimationFrame(state.gestureAnimationFrame);
+        state.gestureAnimationFrame = null;
+    }
+
     if (state.cameraStream) {
-        state.cameraStream.getTracks().forEach(track => track.stop());
+        state.cameraStream.getTracks().forEach(track => {
+            track.stop();
+        });
     }
 
     state.cameraStream = null;
-    state.cameraActive = false;
+    state.lastVideoTime = -1;
+    state.lastGesture = "No hand detected";
 
     const video = document.getElementById("cameraVideo");
     const placeholder = document.getElementById("cameraPlaceholder");
     const startButton = document.getElementById("cameraStart");
     const stopButton = document.getElementById("cameraStop");
     const statusText = document.getElementById("cameraStatusText");
+    const resultText = document.getElementById("gestureResultText");
+    const description = document.getElementById("gestureDescription");
+    const indicator = document.getElementById("gestureStatusIndicator");
 
     if (video) {
+        video.pause();
         video.srcObject = null;
         video.hidden = true;
     }
 
-    if (placeholder) placeholder.hidden = false;
-    if (startButton) startButton.disabled = false;
-    if (stopButton) stopButton.disabled = true;
-    if (statusText) statusText.textContent = "Camera off";
+    if (placeholder) {
+        placeholder.hidden = false;
+    }
+
+    if (startButton) {
+        startButton.disabled = state.cameraStarting;
+        startButton.textContent = state.cameraStarting
+            ? "Starting camera..."
+            : "Enable camera";
+    }
+
+    if (stopButton) {
+        stopButton.disabled = true;
+    }
+
+    if (statusText) {
+        statusText.textContent = "Camera off";
+    }
+
+    if (resultText) {
+        resultText.textContent = "Camera is off";
+    }
+
+    if (description) {
+        description.textContent =
+            "Enable the camera to initialize hand detection.";
+    }
+
+    if (indicator) {
+        indicator.classList.remove("gesture-detected");
+    }
+
+    resetFingerStatuses();
 }
+
+/* =========================================
+   ACCESSIBILITY AND SETTINGS EVENTS
+========================================= */
 
 function attachSettingsEvents() {
     document.querySelectorAll("[data-setting]").forEach(input => {
@@ -1324,8 +2019,12 @@ function attachSettingsEvents() {
         speechRate.addEventListener("input", () => {
             settings.speechRate = Number(speechRate.value);
 
-            document.getElementById("speechRateValue").textContent =
-                `${settings.speechRate.toFixed(1)}×`;
+            const value = document.getElementById("speechRateValue");
+
+            if (value) {
+                value.textContent =
+                    `${settings.speechRate.toFixed(1)}×`;
+            }
 
             saveSettings();
         });
@@ -1337,8 +2036,11 @@ function attachSettingsEvents() {
         fontSize.addEventListener("input", () => {
             settings.fontSize = Number(fontSize.value);
 
-            document.getElementById("fontSizeValue").textContent =
-                `${settings.fontSize}px`;
+            const value = document.getElementById("fontSizeValue");
+
+            if (value) {
+                value.textContent = `${settings.fontSize}px`;
+            }
 
             applySettings();
             saveSettings();
@@ -1389,48 +2091,75 @@ function attachSettingsEvents() {
             updateUserDetails();
 
             setPage("dashboard");
+
             showToast("Local AURA data cleared.");
         });
     }
 }
 
+/* =========================================
+   ACTIVITY EVENTS
+========================================= */
+
 function attachActivityEvents() {
     const button = document.getElementById("clearActivity");
 
+    if (!button) return;
+
     button.addEventListener("click", () => {
-        const confirmed = window.confirm("Clear your activity history?");
+        const confirmed = window.confirm(
+            "Clear your activity history?"
+        );
 
         if (!confirmed) return;
 
         activity.splice(0, activity.length);
-        saveActivity();
 
+        saveActivity();
         renderPage("activity");
+
         showToast("Activity history cleared.");
     });
 }
 
+/* =========================================
+   PROFILE EVENTS
+========================================= */
+
 function attachProfileEvents() {
     const form = document.getElementById("profileForm");
+
+    if (!form) return;
 
     form.addEventListener("submit", event => {
         event.preventDefault();
 
-        profile.name = document.getElementById("profileName").value.trim() || "User";
-        profile.email = document.getElementById("profileEmail").value.trim();
-        profile.preferredMode = document.getElementById("preferredMode").value;
+        profile.name =
+            document.getElementById("profileName").value.trim() || "User";
+
+        profile.email =
+            document.getElementById("profileEmail").value.trim();
+
+        profile.preferredMode =
+            document.getElementById("preferredMode").value;
 
         saveProfile();
         updateUserDetails();
 
-        logActivity("Updated profile", "Saved local profile preferences.");
+        logActivity(
+            "Updated profile",
+            "Saved local profile preferences."
+        );
 
         showToast("Profile saved successfully.");
+
         renderPage("profile");
     });
 }
 
-/* Global application events */
+/* =========================================
+   GLOBAL APPLICATION EVENTS
+========================================= */
 
 document.querySelectorAll(".nav-item").forEach(button => {
     button.addEventListener("click", () => {
@@ -1438,17 +2167,29 @@ document.querySelectorAll(".nav-item").forEach(button => {
     });
 });
 
-document.getElementById("topbarProfile").addEventListener("click", () => {
-    setPage("profile");
-});
+const topbarProfile = document.getElementById("topbarProfile");
 
-document.getElementById("menuToggle").addEventListener("click", () => {
-    document.getElementById("sidebar").classList.toggle("sidebar-open");
-});
+if (topbarProfile) {
+    topbarProfile.addEventListener("click", () => {
+        setPage("profile");
+    });
+}
+
+const menuToggle = document.getElementById("menuToggle");
+
+if (menuToggle) {
+    menuToggle.addEventListener("click", () => {
+        const sidebar = document.getElementById("sidebar");
+
+        if (sidebar) {
+            sidebar.classList.toggle("sidebar-open");
+        }
+    });
+}
 
 document.addEventListener("keydown", event => {
     if (event.key === "Escape") {
-        document.getElementById("sidebar").classList.remove("sidebar-open");
+        document.getElementById("sidebar")?.classList.remove("sidebar-open");
     }
 });
 
@@ -1459,9 +2200,16 @@ window.addEventListener("beforeunload", () => {
     if ("speechSynthesis" in window) {
         window.speechSynthesis.cancel();
     }
+
+    if (state.handLandmarker) {
+        state.handLandmarker.close();
+        state.handLandmarker = null;
+    }
 });
 
-/* Start AURA */
+/* =========================================
+   START AURA
+========================================= */
 
 applySettings();
 updateUserDetails();
