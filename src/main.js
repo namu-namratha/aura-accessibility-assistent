@@ -656,7 +656,33 @@ function renderGestures() {
                     <strong id="littleFingerStatus">—</strong>
                 </div>
 
-                <h3>How to test</h3>
+                <h3>How to test</h3>     
+
+                <h3>Gesture Actions</h3>
+                <div class="info-row">
+                   <span>Current Action</span>
+                   <strong id="gestureActionStatus">Waiting for gesture</strong>
+                </div>
+
+                <div class="info-row">
+                  <span>✋ Open palm</span>
+                  <strong>Pause actions</strong>
+                </div>
+
+                <div class="info-row">
+                  <span>☝️ One finger raised</span>
+                  <strong>Select mode</strong>
+                </div>
+
+                <div class="info-row">
+                  <span>✊ Closed fist</span>
+                  <strong>Stop actions</strong>
+                </div>
+
+                <p class="muted-text">
+                    Gesture actions are a demonstration. They do not control your
+                     computer or other applications.
+                </p>
 
                 <ul class="check-list">
                     <li>Place one hand in front of the camera.</li>
@@ -1770,6 +1796,10 @@ function detectHandFrame(video, landmarker) {
 /* =========================================
    PROCESS MEDIAPIPE LANDMARKS
 ========================================= */
+let pendingGesture = "";
+let pendingGestureCount = 0;
+let stableGesture = "";
+const GESTURE_STABILITY_FRAMES = 5;
 
 function processHandResults(results) {
     const hands = results?.landmarks;
@@ -1812,6 +1842,33 @@ function processHandResults(results) {
 
     const raisedFingers = Object.values(fingerResults)
         .filter(Boolean).length;
+    let detectedGesture = "";
+
+    if (raisedFingers === 4) {
+      detectedGesture = "Open hand detected";
+    } else if (raisedFingers === 0) {
+      detectedGesture = "Closed fingers detected";
+    } else if (
+       fingerResults.index &&
+       !fingerResults.middle &&
+       !fingerResults.ring &&
+       !fingerResults.little
+    ) {
+        detectedGesture = "One finger raised";
+      } else {
+         detectedGesture = `${raisedFingers} fingers raised`;
+       }
+
+       if (detectedGesture === pendingGesture) {
+         pendingGestureCount++;
+       } else {
+          pendingGesture = detectedGesture;
+          pendingGestureCount = 1;
+       }
+
+       if (pendingGestureCount >= GESTURE_STABILITY_FRAMES) {
+        stableGesture = detectedGesture;
+       }
 
     let gesture = "Hand detected";
 
@@ -1823,9 +1880,24 @@ function processHandResults(results) {
         gesture = `${raisedFingers} finger${raisedFingers === 1 ? "" : "s"} raised`;
     }
 
-    state.lastGesture = gesture;
+   state.lastGesture = gesture;
 
-    updateGestureStatus(gesture);
+updateGestureStatus(gesture);
+
+const actionStatus = document.getElementById("gestureActionStatus");
+if (actionStatus) {
+    if (pendingGestureCount < GESTURE_STABILITY_FRAMES) {
+        actionStatus.textContent = "Checking gesture...";
+    } else if (stableGesture === "Open hand detected") {
+        actionStatus.textContent = "Pause actions";
+    } else if (stableGesture === "One finger raised") {
+        actionStatus.textContent = "Select mode";
+    } else if (stableGesture === "Closed fingers detected") {
+        actionStatus.textContent = "Stop actions";
+    } else {
+        actionStatus.textContent = "No assigned action";
+    }
+}
 }
 
 /*
@@ -2215,3 +2287,4 @@ applySettings();
 updateUserDetails();
 updateDate();
 setPage("dashboard");
+
