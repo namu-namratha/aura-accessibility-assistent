@@ -659,10 +659,16 @@ function renderGestures() {
                 <h3>How to test</h3>     
 
                 <h3>Gesture Actions</h3>
-                <div class="info-row">
-                   <span>Current Action</span>
-                   <strong id="gestureActionStatus">Waiting for gesture</strong>
-                </div>
+
+<div class="info-row">
+    <span>Gestures recognized</span>
+    <strong id="recognizedGestureCount">0</strong>
+</div>
+
+<div class="info-row">
+    <span>Current Action</span>
+    <strong id="gestureActionStatus">Waiting for gesture</strong>
+</div>
 
                 <div class="info-row">
                   <span>✋ Open palm</span>
@@ -1796,10 +1802,12 @@ function detectHandFrame(video, landmarker) {
 /* =========================================
    PROCESS MEDIAPIPE LANDMARKS
 ========================================= */
+
 let pendingGesture = "";
 let pendingGestureCount = 0;
 let stableGesture = "";
 const GESTURE_STABILITY_FRAMES = 5;
+let recognizedGestureCount = 0;
 
 function processHandResults(results) {
     const hands = results?.landmarks;
@@ -1807,26 +1815,24 @@ function processHandResults(results) {
     if (!hands || hands.length === 0) {
         state.lastGesture = "No hand detected";
 
+        pendingGesture = "";
+        pendingGestureCount = 0;
+        stableGesture = "";
+
         updateGestureStatus("No hand detected");
         resetFingerStatuses();
+
+        const actionStatus =
+            document.getElementById("gestureActionStatus");
+
+        if (actionStatus) {
+            actionStatus.textContent = "Waiting for gesture";
+        }
 
         return;
     }
 
     const landmarks = hands[0];
-
-    /*
-      MediaPipe returns 21 landmarks per detected hand.
-
-      Finger tip and joint landmark indexes:
-      Index:  8 tip, 6 joint
-      Middle: 12 tip, 10 joint
-      Ring:   16 tip, 14 joint
-      Little: 20 tip, 18 joint
-
-      These comparisons provide a basic estimate of
-      whether each finger is extended.
-    */
 
     const fingerResults = {
         index: isFingerExtended(landmarks, 8, 6),
@@ -1835,69 +1841,207 @@ function processHandResults(results) {
         little: isFingerExtended(landmarks, 20, 18)
     };
 
-    updateFingerStatus("indexFingerStatus", fingerResults.index);
-    updateFingerStatus("middleFingerStatus", fingerResults.middle);
-    updateFingerStatus("ringFingerStatus", fingerResults.ring);
-    updateFingerStatus("littleFingerStatus", fingerResults.little);
+    updateFingerStatus(
+        "indexFingerStatus",
+        fingerResults.index
+    );
+
+    updateFingerStatus(
+        "middleFingerStatus",
+        fingerResults.middle
+    );
+
+    updateFingerStatus(
+        "ringFingerStatus",
+        fingerResults.ring
+    );
+
+    updateFingerStatus(
+        "littleFingerStatus",
+        fingerResults.little
+    );
 
     const raisedFingers = Object.values(fingerResults)
         .filter(Boolean).length;
-    let detectedGesture = "";
+
+    let detectedGesture;
 
     if (raisedFingers === 4) {
-      detectedGesture = "Open hand detected";
+        detectedGesture = "Open hand detected";
     } else if (raisedFingers === 0) {
-      detectedGesture = "Closed fingers detected";
+        detectedGesture = "Closed fingers detected";
     } else if (
-       fingerResults.index &&
-       !fingerResults.middle &&
-       !fingerResults.ring &&
-       !fingerResults.little
+        fingerResults.index &&
+        !fingerResults.middle &&
+        !fingerResults.ring &&
+        !fingerResults.little
     ) {
         detectedGesture = "One finger raised";
-      } else {
-         detectedGesture = `${raisedFingers} fingers raised`;
-       }
-
-       if (detectedGesture === pendingGesture) {
-         pendingGestureCount++;
-       } else {
-          pendingGesture = detectedGesture;
-          pendingGestureCount = 1;
-       }
-
-       if (pendingGestureCount >= GESTURE_STABILITY_FRAMES) {
-        stableGesture = detectedGesture;
-       }
-
-    let gesture = "Hand detected";
-
-    if (raisedFingers === 0) {
-        gesture = "Closed fingers detected";
-    } else if (raisedFingers === 4) {
-        gesture = "Open hand detected";
+    } else if (
+        fingerResults.index &&
+        fingerResults.middle &&
+        !fingerResults.ring &&
+        !fingerResults.little
+    ) {
+        detectedGesture = "Two fingers raised";
     } else {
-        gesture = `${raisedFingers} finger${raisedFingers === 1 ? "" : "s"} raised`;
+        detectedGesture = `${raisedFingers} fingers raised`;
     }
 
-   state.lastGesture = gesture;
+    // Require a stable gesture across multiple frames.
+    if (detectedGesture === pendingGesture) {
+        pendingGestureCount++;
+    } else {
+        pendingGesture = detectedGesture;
+        pendingGestureCount = 1;
+    }
 
-updateGestureStatus(gesture);
+    state.lastGesture = detectedGesture;
+    updateGestureStatus(detectedGesture);
 
-const actionStatus = document.getElementById("gestureActionStatus");
-if (actionStatus) {
+    const actionStatus =
+        document.getElementById("gestureActionStatus");
+
     if (pendingGestureCount < GESTURE_STABILITY_FRAMES) {
-        actionStatus.textContent = "Checking gesture...";
-    } else if (stableGesture === "Open hand detected") {
-        actionStatus.textContent = "Pause actions";
-    } else if (stableGesture === "One finger raised") {
-        actionStatus.textContent = "Select mode";
-    } else if (stableGesture === "Closed fingers detected") {
-        actionStatus.textContent = "Stop actions";
-    } else {
-        actionStatus.textContent = "No assigned action";
+        if (actionStatus) {
+            actionStatus.textContent = "Checking gesture...";
+        }
+
+        return;
     }
-}
+
+    // Execute each gesture only when it changes.
+    if (stableGesture === detectedGesture) {
+        return;
+    }
+
+    stableGesture = detectedGesture;
+    recognizedGestureCount++;
+
+    const counterElement =
+        document.getElementById("recognizedGestureCount");
+
+    if (counterElement) {
+        counterElement.textContent = recognizedGestureCount;
+    }
+
+    console.log("AURA recognized gesture:", detectedGesture);
+
+    // Perform the selected operation.
+    switch (detectedGesture) {
+        case "Open hand detected":
+            if (actionStatus) {
+                actionStatus.textContent =
+                    "Opening AURA Voice Assistant...";
+            }
+
+            setPage("voice");
+
+            showToast("AURA Voice Assistant activated.");
+            break;
+
+        case "One finger raised":
+            if (actionStatus) {
+                actionStatus.textContent =
+                    "Starting voice input...";
+            }
+
+            setPage("voice");
+            startListening();
+            break;
+
+        case "Two fingers raised": {
+            const pageContent =
+                document.getElementById("pageContent");
+
+            const pageText = pageContent
+                ? pageContent.innerText.trim()
+                : "";
+
+            if (!("speechSynthesis" in window)) {
+                if (actionStatus) {
+                    actionStatus.textContent =
+                        "Spoken reading is not supported.";
+                }
+
+                showToast(
+                    "Your browser does not support spoken reading.",
+                    "error"
+                );
+
+                break;
+            }
+
+            if (!pageText) {
+                if (actionStatus) {
+                    actionStatus.textContent =
+                        "No page content to read.";
+                }
+
+                break;
+            }
+
+            window.speechSynthesis.cancel();
+
+            const pageUtterance =
+                new SpeechSynthesisUtterance(pageText);
+
+            pageUtterance.rate =
+                Number(settings.speechRate) || 1;
+
+            pageUtterance.onstart = () => {
+                const status =
+                    document.getElementById("gestureActionStatus");
+
+                if (status) {
+                    status.textContent = "Reading page aloud...";
+                }
+            };
+
+            pageUtterance.onend = () => {
+                const status =
+                    document.getElementById("gestureActionStatus");
+
+                if (status) {
+                    status.textContent = "Finished reading page";
+                }
+            };
+
+            window.speechSynthesis.speak(pageUtterance);
+            break;
+        }
+
+        case "Closed fingers detected":
+            if (actionStatus) {
+                actionStatus.textContent =
+                    "Stopping AURA and returning to dashboard...";
+            }
+
+            stopListening();
+
+            if ("speechSynthesis" in window) {
+                window.speechSynthesis.cancel();
+            }
+
+            stopCamera();
+            setPage("dashboard");
+
+            showToast(
+                "AURA operations stopped. Returned to dashboard."
+            );
+            break;
+
+        default:
+            if (actionStatus) {
+                actionStatus.textContent =
+                    "Gesture detected — no action assigned";
+            }
+    }
+
+    logActivity(
+        "Gesture recognized",
+        `Detected gesture: ${detectedGesture}`
+    );
 }
 
 /*
@@ -2287,4 +2431,3 @@ applySettings();
 updateUserDetails();
 updateDate();
 setPage("dashboard");
-
