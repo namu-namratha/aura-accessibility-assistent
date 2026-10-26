@@ -30,6 +30,7 @@ const PAGE_TITLES = {
     dashboard: "Dashboard",
     assistant: "AI Assistant",
     voice: "Voice Assistant",
+    automation: "Smart Automation",
     gestures: "Gesture Controls",
     accessibility: "Accessibility",
     activity: "Activity",
@@ -257,15 +258,16 @@ function setPage(page) {
     renderPage(page);
 }
 
+
 function renderPage(page) {
     const container = document.getElementById("pageContent");
-
     if (!container) return;
 
     const pages = {
         dashboard: renderDashboard,
         assistant: renderAssistant,
         voice: renderVoiceAssistant,
+        automation: renderSmartAutomation,
         gestures: renderGestures,
         accessibility: renderAccessibility,
         activity: renderActivity,
@@ -273,9 +275,9 @@ function renderPage(page) {
         settings: renderSettings
     };
 
-    container.innerHTML = pages[page]();
-
-    attachPageEvents(page);
+    const render = pages[page] || pages.dashboard;
+    container.innerHTML = render();
+    attachPageEvents(page in pages ? page : "dashboard");
 }
 
 /* =========================================
@@ -475,6 +477,147 @@ function renderAssistant() {
 /* =========================================
    VOICE ASSISTANT
 ========================================= */
+/* =========================================
+   SMART AUTOMATION
+========================================= */
+
+function renderSmartAutomation() {
+    return `
+        <section class="page-intro">
+            <span class="eyebrow">YOUR PERSONAL WEB ASSISTANT</span>
+            <h1>Smart Automation</h1>
+            <p>Tell AURA which website you want to open.</p>
+        </section>
+
+        <section class="panel" style="padding: 24px;">
+            <h2>What would you like to do?</h2>
+
+            <form id="automationForm">
+                <label for="automationCommand">
+                    Enter your command
+                </label>
+
+                <input
+                    id="automationCommand"
+                    type="text"
+                    placeholder="Example: Open YouTube"
+                    autocomplete="off"
+                    required
+                    style="
+                        width: 100%;
+                        padding: 14px;
+                        margin: 12px 0;
+                        border-radius: 10px;
+                    "
+                >
+
+                <button type="submit" class="btn btn-primary">
+                    Run Command
+                </button>
+            </form>
+
+            <p id="automationStatus" role="status" aria-live="polite">
+                Ready for your command.
+            </p>
+        </section>
+
+        <section class="panel" style="padding: 24px; margin-top: 20px;">
+            <h2>Quick Access</h2>
+
+            <div class="feature-grid">
+                <button class="feature-card" data-automation-site="google">
+                    <h3>Google</h3>
+                    <p>Search the web</p>
+                </button>
+
+                <button class="feature-card" data-automation-site="youtube">
+                    <h3>YouTube</h3>
+                    <p>Open videos</p>
+                </button>
+
+                <button class="feature-card" data-automation-site="whatsapp">
+                    <h3>WhatsApp</h3>
+                    <p>Open WhatsApp Web</p>
+                </button>
+
+                <button class="feature-card" data-automation-site="github">
+                    <h3>GitHub</h3>
+                    <p>Open your code workspace</p>
+                </button>
+
+                <button class="feature-card" data-automation-site="chatgpt">
+                    <h3>ChatGPT</h3>
+                    <p>Open ChatGPT</p>
+                </button>
+            </div>
+        </section>
+    `;
+}
+
+/* =========================================
+   SMART AUTOMATION EVENTS
+========================================= */
+
+function attachSmartAutomationEvents() {
+    const form = document.getElementById("automationForm");
+    const input = document.getElementById("automationCommand");
+    const status = document.getElementById("automationStatus");
+
+    const websites = {
+        google: "https://www.google.com/",
+        youtube: "https://www.youtube.com/",
+        whatsapp: "https://web.whatsapp.com/",
+        github: "https://github.com/",
+        chatgpt: "https://chatgpt.com/"
+    };
+
+    function openWebsite(site) {
+        const url = websites[site];
+
+        if (!url) {
+            status.textContent =
+                "Website not recognised. Try Google, YouTube, WhatsApp, GitHub, or ChatGPT.";
+            return;
+        }
+
+        window.open(url, "_blank", "noopener,noreferrer");
+
+        status.textContent =
+            `Opening ${site.charAt(0).toUpperCase() + site.slice(1)} in a new tab. If it doesn't open, allow pop-ups in your browser.`;
+    }
+
+    function runCommand(command) {
+        const text = command.toLowerCase().trim();
+
+        if (text.includes("youtube")) {
+            openWebsite("youtube");
+        } else if (text.includes("whatsapp")) {
+            openWebsite("whatsapp");
+        } else if (text.includes("github")) {
+            openWebsite("github");
+        } else if (text.includes("chatgpt") || text.includes("chat gpt")) {
+            openWebsite("chatgpt");
+        } else if (text.includes("google")) {
+            openWebsite("google");
+        } else {
+            status.textContent =
+                "I couldn't recognise that website. Try: Open YouTube.";
+        }
+    }
+
+    if (form && input && status) {
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+            runCommand(input.value);
+        });
+    }
+
+    document.querySelectorAll("[data-automation-site]").forEach(button => {
+        button.addEventListener("click", function () {
+            openWebsite(button.dataset.automationSite);
+        });
+    });
+}
 
 function renderVoiceAssistant() {
     const supported = Boolean(
@@ -1170,6 +1313,9 @@ function attachPageEvents(page) {
 
     if (page === "profile") {
         attachProfileEvents();
+    }
+    if (page === "automation") {
+    attachSmartAutomationEvents();
     }
 }
 
@@ -2239,7 +2385,7 @@ function attachSettingsEvents() {
 
             if (value) {
                 value.textContent =
-                    `${settings.speechRate.toFixed(1)}×`;
+                   `${settings.speechRate.toFixed(1)}×`;
             }
 
             saveSettings();
