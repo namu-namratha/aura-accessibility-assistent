@@ -511,9 +511,19 @@ function renderSmartAutomation() {
                     "
                 >
 
-                <button type="submit" class="btn btn-primary">
-                    Run Command
-                </button>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                   <button type="submit" class="btn btn-primary">
+                     Run Command
+                   </button>
+
+                    <button
+                       type="button"
+                       id="automationVoiceButton"
+                       class="btn btn-primary"
+                    >
+                        🎙️ Speak Command
+                    </button>
+                </div>
             </form>
 
             <p id="automationStatus" role="status" aria-live="polite">
@@ -562,6 +572,7 @@ function attachSmartAutomationEvents() {
     const form = document.getElementById("automationForm");
     const input = document.getElementById("automationCommand");
     const status = document.getElementById("automationStatus");
+    const voiceButton = document.getElementById("automationVoiceButton");
 
     const websites = {
         google: "https://www.google.com/",
@@ -605,6 +616,7 @@ function attachSmartAutomationEvents() {
         }
     }
 
+    // Typed commands
     if (form && input && status) {
         form.addEventListener("submit", function (event) {
             event.preventDefault();
@@ -612,11 +624,83 @@ function attachSmartAutomationEvents() {
         });
     }
 
+    // Quick Access buttons
     document.querySelectorAll("[data-automation-site]").forEach(button => {
         button.addEventListener("click", function () {
             openWebsite(button.dataset.automationSite);
         });
     });
+
+    // Voice commands
+    if (voiceButton && status && input) {
+        const SpeechRecognition =
+            window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+            voiceButton.addEventListener("click", function () {
+                status.textContent =
+                    "Voice recognition isn't supported by this browser. Try the latest Chrome browser.";
+            });
+        } else {
+            const recognition = new SpeechRecognition();
+
+            recognition.lang = "en-IN";
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            let listening = false;
+
+            recognition.onstart = function () {
+                listening = true;
+                voiceButton.textContent = "🔴 Listening...";
+                status.textContent =
+                    "AURA is listening. Say a website name, such as Open YouTube.";
+            };
+
+            recognition.onresult = function (event) {
+                const spokenCommand =
+                    event.results[0][0].transcript.trim();
+
+                input.value = spokenCommand;
+                status.textContent = `You said: "${spokenCommand}"`;
+
+                runCommand(spokenCommand);
+            };
+
+            recognition.onerror = function (event) {
+                if (event.error === "not-allowed") {
+                    status.textContent =
+                        "Microphone access was blocked. Allow microphone access in your browser settings.";
+                } else if (event.error === "no-speech") {
+                    status.textContent =
+                        "No speech detected. Click Speak Command and try again.";
+                } else {
+                    status.textContent =
+                        `Voice recognition error: ${event.error}. Please try again.`;
+                }
+            };
+
+            recognition.onend = function () {
+                listening = false;
+                voiceButton.textContent = "🎙️ Speak Command";
+            };
+
+            voiceButton.addEventListener("click", function () {
+                if (listening) {
+                    recognition.stop();
+                    return;
+                }
+
+                try {
+                    recognition.start();
+                } catch (error) {
+                    status.textContent =
+                        "Voice recognition is starting. Please wait a moment and try again.";
+                }
+            });
+        }
+    }
 }
 
 function renderVoiceAssistant() {
