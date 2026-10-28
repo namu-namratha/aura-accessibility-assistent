@@ -574,6 +574,17 @@ function attachSmartAutomationEvents() {
     const status = document.getElementById("automationStatus");
     const voiceButton = document.getElementById("automationVoiceButton");
 
+    if (!form || !input || !status) {
+        console.warn("Smart Automation elements were not found.");
+        return;
+    }
+
+    // Prevent duplicate event listeners if this page is rendered again.
+    if (form.dataset.eventsAttached === "true") {
+        return;
+    }
+    form.dataset.eventsAttached = "true";
+
     const websites = {
         google: "https://www.google.com/",
         youtube: "https://www.youtube.com/",
@@ -591,117 +602,164 @@ function attachSmartAutomationEvents() {
             return;
         }
 
-        window.open(url, "_blank", "noopener,noreferrer");
+        const newTab = window.open(url, "_blank");
 
-        status.textContent =
-            `Opening ${site.charAt(0).toUpperCase() + site.slice(1)} in a new tab. If it doesn't open, allow pop-ups in your browser.`;
+        if (newTab) {
+            try {
+                newTab.opener = null;
+            } catch (error) {
+                console.warn("Could not clear the new tab's opener.", error);
+            }
+
+            status.textContent =
+                `Opening ${site.charAt(0).toUpperCase() + site.slice(1)} in a new tab.`;
+        } else {
+            status.textContent =
+                "The browser blocked the new tab. Allow pop-ups for AURA and try again.";
+        }
     }
 
     function runCommand(command) {
         const text = command.toLowerCase().trim();
 
-        if (text.includes("youtube")) {
-            openWebsite("youtube");
-        } else if (text.includes("whatsapp")) {
-            openWebsite("whatsapp");
-        } else if (text.includes("github")) {
-            openWebsite("github");
-        } else if (text.includes("chatgpt") || text.includes("chat gpt")) {
-            openWebsite("chatgpt");
-        } else if (text.includes("google")) {
-            openWebsite("google");
+        if (!text) {
+            status.textContent = "Please enter or speak a command.";
+            return;
+        }
+
+        const siteAliases = [
+            ["chatgpt", /\bchat\s*gpt\b|\bchatgpt\b/],
+            ["youtube", /\byou\s*tube\b|\byoutube\b/],
+            ["whatsapp", /\bwhats\s*app\b|\bwhatsapp\b/],
+            ["github", /\bgithub\b|\bgit\s*hub\b/],
+            ["google", /\bgoogle\b/]
+        ];
+
+        const matchedSite = siteAliases.find(([, pattern]) =>
+            pattern.test(text)
+        );
+
+        if (matchedSite) {
+            openWebsite(matchedSite[0]);
         } else {
             status.textContent =
-                "I couldn't recognise that website. Try: Open YouTube.";
+                "I couldn't recognise that website. Try: Open YouTube, Open Google, or Open GitHub.";
         }
     }
 
     // Typed commands
-    if (form && input && status) {
-        form.addEventListener("submit", function (event) {
-            event.preventDefault();
-            runCommand(input.value);
-        });
-    }
+    form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        runCommand(input.value);
+    });
 
     // Quick Access buttons
     document.querySelectorAll("[data-automation-site]").forEach(button => {
+        if (button.dataset.automationEventsAttached === "true") {
+            return;
+        }
+
+        button.dataset.automationEventsAttached = "true";
+
         button.addEventListener("click", function () {
             openWebsite(button.dataset.automationSite);
         });
     });
 
     // Voice commands
-    if (voiceButton && status && input) {
-        const SpeechRecognition =
-            window.SpeechRecognition || window.webkitSpeechRecognition;
-
-        if (!SpeechRecognition) {
-            voiceButton.addEventListener("click", function () {
-                status.textContent =
-                    "Voice recognition isn't supported by this browser. Try the latest Chrome browser.";
-            });
-        } else {
-            const recognition = new SpeechRecognition();
-
-            recognition.lang = "en-IN";
-            recognition.continuous = false;
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
-
-            let listening = false;
-
-            recognition.onstart = function () {
-                listening = true;
-                voiceButton.textContent = "🔴 Listening...";
-                status.textContent =
-                    "AURA is listening. Say a website name, such as Open YouTube.";
-            };
-
-            recognition.onresult = function (event) {
-                const spokenCommand =
-                    event.results[0][0].transcript.trim();
-
-                input.value = spokenCommand;
-                status.textContent = `You said: "${spokenCommand}"`;
-
-                runCommand(spokenCommand);
-            };
-
-            recognition.onerror = function (event) {
-                if (event.error === "not-allowed") {
-                    status.textContent =
-                        "Microphone access was blocked. Allow microphone access in your browser settings.";
-                } else if (event.error === "no-speech") {
-                    status.textContent =
-                        "No speech detected. Click Speak Command and try again.";
-                } else {
-                    status.textContent =
-                        `Voice recognition error: ${event.error}. Please try again.`;
-                }
-            };
-
-            recognition.onend = function () {
-                listening = false;
-                voiceButton.textContent = "🎙️ Speak Command";
-            };
-
-            voiceButton.addEventListener("click", function () {
-                if (listening) {
-                    recognition.stop();
-                    return;
-                }
-
-                try {
-                    recognition.start();
-                } catch (error) {
-                    status.textContent =
-                        "Voice recognition is starting. Please wait a moment and try again.";
-                }
-            });
-        }
+    if (!voiceButton) {
+        console.warn("Smart Automation microphone button was not found.");
+        return;
     }
+
+    if (voiceButton.dataset.voiceEventsAttached === "true") {
+        return;
+    }
+    voiceButton.dataset.voiceEventsAttached = "true";
+
+    const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+        voiceButton.addEventListener("click", function () {
+            status.textContent =
+                "Voice recognition is not supported by this browser. Try the latest Chrome browser.";
+        });
+        return;
+    }
+
+    const recognition = new SpeechRecognition();
+
+    recognition.lang = "en-IN";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    let listening = false;
+
+    recognition.onstart = function () {
+        listening = true;
+        voiceButton.textContent = "🔴 Listening...";
+        status.textContent =
+            "AURA is listening. Say: Open YouTube, Open Google, Open WhatsApp, Open GitHub, or Open ChatGPT.";
+    };
+
+    recognition.onresult = function (event) {
+        const result = event.results[0]?.[0];
+        const spokenCommand = result?.transcript?.trim() || "";
+
+        if (!spokenCommand) {
+            status.textContent =
+                "No command was recognised. Please try speaking again.";
+            return;
+        }
+
+        input.value = spokenCommand;
+        status.textContent = `You said: "${spokenCommand}"`;
+
+        runCommand(spokenCommand);
+    };
+
+    recognition.onerror = function (event) {
+        const errors = {
+            "not-allowed":
+                "Microphone access was blocked. Allow microphone access in your browser settings.",
+            "no-speech":
+                "No speech detected. Click Speak Command and try again.",
+            "audio-capture":
+                "No microphone was detected. Check your microphone connection.",
+            "network":
+                "Speech recognition encountered a network error. Check your connection and try again.",
+            "aborted":
+                "Voice recognition was stopped."
+        };
+
+        status.textContent =
+            errors[event.error] ||
+            `Voice recognition error: ${event.error}. Please try again.`;
+    };
+
+    recognition.onend = function () {
+        listening = false;
+        voiceButton.textContent = "🎙️ Speak Command";
+    };
+
+    voiceButton.addEventListener("click", function () {
+        if (listening) {
+            recognition.stop();
+            return;
+        }
+
+        try {
+            recognition.start();
+        } catch (error) {
+            console.error("Could not start Smart Automation voice recognition:", error);
+            status.textContent =
+                "Voice recognition could not start. Please wait a moment and try again.";
+        }
+    });
 }
+
 
 function renderVoiceAssistant() {
     const supported = Boolean(
@@ -1494,29 +1552,67 @@ function appendChatMessage(message, sender) {
     container.scrollTop = container.scrollHeight;
 }
 
-function sendChatMessage(message) {
+async function sendChatMessage(message) {
     const cleanMessage = message.trim();
 
     if (!cleanMessage) return;
 
     appendChatMessage(cleanMessage, "user");
 
-    const response = getLocalAssistantResponse(cleanMessage);
+    const container = document.getElementById("chatMessages");
+    if (!container) return;
 
-    window.setTimeout(() => {
-        // Avoid writing into a chat that has been cleared or navigated away from.
-        const container = document.getElementById("chatMessages");
+    const loadingRow = document.createElement("div");
+    loadingRow.className = "message assistant-message";
+    loadingRow.id = "auraThinking";
 
-        if (!container) return;
+    const loadingText = document.createElement("p");
+    loadingText.textContent = "AURA is thinking...";
+    loadingRow.appendChild(loadingText);
+    container.appendChild(loadingRow);
+    container.scrollTop = container.scrollHeight;
 
-        appendChatMessage(response, "assistant");
+    try {
+        const response = await fetch("http://localhost:5000/api/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                message: cleanMessage
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success || !data.answer) {
+            throw new Error(
+                data.message || "AURA could not answer right now."
+            );
+        }
+
+        const thinking = document.getElementById("auraThinking");
+        if (thinking) thinking.remove();
+
+        appendChatMessage(data.answer, "assistant");
 
         if (settings.voiceEnabled) {
-            speakText(response);
+            speakText(data.answer);
         }
-    }, 250);
 
-    logActivity("Used AI Assistant", cleanMessage.slice(0, 100));
+        logActivity("Used AI Assistant", cleanMessage.slice(0, 100));
+    } catch (error) {
+        const thinking = document.getElementById("auraThinking");
+        if (thinking) thinking.remove();
+
+        appendChatMessage(
+            "I'm having trouble connecting to my AI service. Please check that the AURA backend is running and try again.",
+            "assistant"
+        );
+
+        console.error("AURA chat error:", error);
+        showToast("Could not connect to AURA's AI service.");
+    }
 }
 
 function attachChatEvents() {
@@ -1582,15 +1678,28 @@ function speakText(text) {
    BROWSER SPEECH RECOGNITION
 ========================================= */
 
+
 function attachVoiceEvents() {
     const startButton = document.getElementById("voiceStart");
     const stopButton = document.getElementById("voiceStop");
 
-    if (!startButton || !stopButton) return;
+    if (!startButton || !stopButton) {
+        console.warn("Voice Assistant buttons were not found.");
+        return;
+    }
+
+    // Prevent duplicate event listeners.
+    if (startButton.dataset.voiceEventsAttached === "true") {
+        return;
+    }
 
     startButton.addEventListener("click", startListening);
     stopButton.addEventListener("click", stopListening);
+
+    startButton.dataset.voiceEventsAttached = "true";
 }
+
+
 
 function startListening() {
     const Recognition =
@@ -1601,7 +1710,6 @@ function startListening() {
             "Speech recognition is not supported in this browser.",
             "error"
         );
-
         return;
     }
 
@@ -1609,7 +1717,7 @@ function startListening() {
 
     const recognition = new Recognition();
 
-    recognition.lang = navigator.language || "en-US";
+    recognition.lang = navigator.language || "en-IN";
     recognition.interimResults = false;
     recognition.continuous = false;
 
@@ -1626,71 +1734,127 @@ function startListening() {
 
         if (description) {
             description.textContent =
-                "Speak clearly. AURA will process the recognized words.";
+                "Speak clearly. AURA is processing your command.";
         }
 
         if (start) start.hidden = true;
         if (stop) stop.hidden = false;
-
         if (orb) orb.classList.add("voice-orb-active");
     };
 
     recognition.onresult = event => {
-        const transcript = event.results[0][0].transcript;
+        const transcript = event.results[0][0].transcript.trim();
+
+        if (!transcript) {
+            showToast("I couldn't understand that. Please try again.", "error");
+            return;
+        }
+
+        const normalized = transcript
+            .toLowerCase()
+            .replace(/[.,!?]/g, "")
+            .trim();
 
         const transcriptElement =
             document.getElementById("voiceTranscript");
+
+        const status = document.getElementById("voiceStatus");
+        const description = document.getElementById("voiceDescription");
 
         if (transcriptElement) {
             transcriptElement.textContent = transcript;
         }
 
-        const response = getLocalAssistantResponse(transcript);
+        // Handle page navigation commands first.
+        const navigationTargets = [
+            ["open voice assistant", "voice"],
+            ["open dashboard", "dashboard"],
+            ["go to dashboard", "dashboard"],
+            ["open assistant", "assistant"],
+            ["go to assistant", "assistant"],
+            ["open voice", "voice"],
+            ["go to voice", "voice"],
+            ["open gestures", "gestures"],
+            ["open gesture", "gestures"],
+            ["open accessibility", "accessibility"],
+            ["go to accessibility", "accessibility"],
+            ["open activity", "activity"],
+            ["go to activity", "activity"],
+            ["open profile", "profile"],
+            ["go to profile", "profile"],
+            ["open settings", "settings"],
+            ["go to settings", "settings"],
+            ["open smart automation", "automation"],
+            ["open automation", "automation"],
+            ["go to automation", "automation"]
+        ];
 
-        const status = document.getElementById("voiceStatus");
-        const description = document.getElementById("voiceDescription");
+        const navigation = navigationTargets.find(([command]) =>
+            normalized.includes(command)
+        );
+
+        if (navigation) {
+            const [, page] = navigation;
+
+            setPage(page);
+
+            const response = `Opening ${page === "voice" ? "Voice Assistant" : page}.`;
+
+            if (status) status.textContent = "Command completed";
+            if (description) description.textContent = response;
+
+            logActivity("Voice navigation", transcript.slice(0, 100));
+
+            if (settings.voiceEnabled) {
+                speakText(response);
+            }
+
+            return;
+        }
+
+        // Handle ordinary questions using AURA's existing response function.
+        let response;
+
+        try {
+            response = getLocalAssistantResponse(transcript);
+        } catch (error) {
+            console.error("AURA response error:", error);
+            response =
+                "Sorry, I couldn't process that request. Please try again.";
+        }
+
+        if (typeof response !== "string" || !response.trim()) {
+            response =
+                "I couldn't generate a response. Please try asking another way.";
+        }
 
         if (status) status.textContent = "Response ready";
-
         if (description) description.textContent = response;
 
-        logActivity(
-            "Used Voice Assistant",
-            transcript.slice(0, 100)
-        );
+        logActivity("Used Voice Assistant", transcript.slice(0, 100));
 
         if (settings.voiceEnabled) {
             speakText(response);
         }
-
-        const normalized = transcript.toLowerCase();
-
-        const navigationTargets = [
-            ["dashboard", "dashboard"],
-            ["assistant", "assistant"],
-            ["voice", "voice"],
-            ["gesture", "gestures"],
-            ["accessibility", "accessibility"],
-            ["activity", "activity"],
-            ["profile", "profile"],
-            ["settings", "settings"]
-        ];
-
-        for (const [keyword, page] of navigationTargets) {
-            if (
-                normalized.includes(`open ${keyword}`) ||
-                normalized.includes(`go to ${keyword}`)
-            ) {
-                setPage(page);
-                break;
-            }
-        }
     };
 
     recognition.onerror = event => {
-        const message = event.error === "not-allowed"
-            ? "Microphone permission was denied."
-            : `Speech recognition error: ${event.error}`;
+        const messages = {
+            "not-allowed": "Microphone permission was denied. Allow microphone access in your browser.",
+            "no-speech": "I didn't hear anything. Please speak and try again.",
+            "audio-capture": "No microphone was detected. Check your microphone connection.",
+            "network": "Speech recognition needs a working network connection."
+        };
+
+        const message =
+            messages[event.error] ||
+            `Speech recognition error: ${event.error}`;
+
+        const status = document.getElementById("voiceStatus");
+        const description = document.getElementById("voiceDescription");
+
+        if (status) status.textContent = "Voice error";
+        if (description) description.textContent = message;
 
         showToast(message, "error");
     };
@@ -1698,18 +1862,9 @@ function startListening() {
     recognition.onend = () => {
         state.listening = false;
 
-        const status = document.getElementById("voiceStatus");
-        const description = document.getElementById("voiceDescription");
         const start = document.getElementById("voiceStart");
         const stop = document.getElementById("voiceStop");
         const orb = document.getElementById("voiceOrb");
-
-        if (status) status.textContent = "Ready to listen";
-
-        if (description) {
-            description.textContent =
-                "Press the microphone button to speak again.";
-        }
 
         if (start) start.hidden = false;
         if (stop) stop.hidden = true;
@@ -1717,6 +1872,8 @@ function startListening() {
         if (orb) {
             orb.classList.remove("voice-orb-active");
         }
+
+        state.recognition = null;
     };
 
     state.recognition = recognition;
@@ -1724,7 +1881,10 @@ function startListening() {
     try {
         recognition.start();
     } catch (error) {
-        console.error(error);
+        console.error("Could not start speech recognition:", error);
+
+        state.listening = false;
+        state.recognition = null;
 
         showToast(
             "Could not start speech recognition. Please try again.",
@@ -1732,6 +1892,7 @@ function startListening() {
         );
     }
 }
+
 
 function stopListening() {
     if (state.recognition) {

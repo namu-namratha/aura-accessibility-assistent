@@ -1,3 +1,4 @@
+let hasReceivedResult = false;
 /* =========================================
    AURA VOICE ASSISTANT
 ========================================= */
@@ -134,7 +135,8 @@ if (SpeechRecognition) {
 
 
         if (finalTranscript) {
-
+            hasReceivedResult = true;
+            try { recognition.stop(); } catch (e) {}
             processCommand(
                 finalTranscript.trim()
             );
@@ -163,6 +165,9 @@ if (SpeechRecognition) {
 
         stopListening();
 
+        if (hasReceivedResult || event.error === "aborted") {
+            return;
+        }
 
         let message =
             "Something went wrong. Please try again.";
@@ -179,7 +184,7 @@ if (SpeechRecognition) {
         if (event.error === "no-speech") {
 
             message =
-                "I didn't hear anything. Please try again.";
+                "I didn't hear anything. Click the microphone and try speaking again.";
 
         }
 
@@ -779,78 +784,3 @@ if (!SpeechRecognition) {
 console.log(
     "AURA Accessibility Assistant initialized."
 )
-import { processCommand } from "./commands.js";
-
-function speakResponse(message) {
-    if (!("speechSynthesis" in window)) {
-        return;
-    }
-
-    window.speechSynthesis.cancel();
-
-    const speech = new SpeechSynthesisUtterance(message);
-    speech.lang = "en-IN";
-    speech.rate = 0.95;
-    speech.pitch = 1;
-
-    window.speechSynthesis.speak(speech);
-}
-
-function handleVoiceCommand(command) {
-    const result = processCommand(command);
-
-    // Update the response area.
-    // Change this selector if your HTML uses a different ID.
-    const responseElement = document.querySelector("#assistantResponse");
-
-    if (typeof result === "string") {
-        if (responseElement) {
-            responseElement.textContent = result;
-        }
-
-        speakResponse(result);
-        return;
-    }
-
-    if (!result || !result.action) {
-        return;
-    }
-
-    switch (result.action) {
-        case "readPage": {
-            const pageText =
-                document.querySelector("main")?.innerText ||
-                document.body.innerText;
-
-            speakResponse(pageText);
-            break;
-        }
-
-        case "stopSpeaking":
-            window.speechSynthesis.cancel();
-            break;
-
-        case "login":
-            window.location.href = "/pages/login.html";
-            break;
-
-        case "register":
-            window.location.href = "/pages/register.html";
-            break;
-
-        case "accessibility":
-            window.location.href = "/pages/accessibility.html";
-            break;
-
-        case "settings":
-            window.location.href = "/pages/settings.html";
-            break;
-
-        case "home":
-            window.location.href = "/";
-            break;
-
-        default:
-            speakResponse("Sorry, that action is not available yet.");
-    }
-}

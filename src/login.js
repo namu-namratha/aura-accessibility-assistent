@@ -1,4 +1,3 @@
-
 import './style.css';
 
 const app = document.querySelector('#login-app');
@@ -59,9 +58,10 @@ app.innerHTML = `
                         <span>Remember me</span>
                     </label>
 
-                    <button type="submit" class="auth-submit">
+                    <button type="submit" class="auth-submit" id="loginSubmit">
                         Sign in
                     </button>
+                    <p id="loginStatus" class="auth-status" role="status" aria-live="polite"></p>
                 </form>
 
                 <div class="auth-divider"><span>OR</span></div>
@@ -84,36 +84,111 @@ app.innerHTML = `
 `;
 
 const loginForm = document.querySelector('#loginForm');
+const loginSubmit = document.querySelector('#loginSubmit');
+const loginStatus = document.querySelector('#loginStatus');
 const guestButton = document.querySelector('#guestButton');
 const backHome = document.querySelector('#backHome');
 const forgotPassword = document.querySelector('#forgotPassword');
 
-loginForm.addEventListener('submit', (event) => {
+loginForm.addEventListener('submit', async (event) => {
     event.preventDefault();
 
     const email = document.querySelector('#email').value.trim();
     const password = document.querySelector('#password').value;
 
     if (!email || !password) {
-        alert('Please enter your email and password.');
+        if (loginStatus) {
+            loginStatus.textContent = 'Please enter your email and password.';
+            loginStatus.style.color = '#dc2626';
+        }
         return;
     }
 
-    // Demo login only: credentials are not verified.
-    // Read the previous details before updating the email.
-    const registeredEmail = sessionStorage.getItem('auraDemoEmail');
-    const registeredName = sessionStorage.getItem('auraDemoName');
-
-    sessionStorage.setItem('auraDemoLoggedIn', 'true');
-    sessionStorage.setItem('auraDemoEmail', email);
-
-    // Keep the name only when the email matches the saved demo details.
-    if (!registeredName || registeredEmail !== email) {
-        sessionStorage.removeItem('auraDemoName');
+    loginSubmit.disabled = true;
+    loginSubmit.textContent = 'Signing in...';
+    if (loginStatus) {
+        loginStatus.textContent = '';
     }
 
-    alert('Demo login successful!');
-    window.location.href = '/pages/dashboard.html';
+    try {
+        const response = await fetch('http://localhost:5000/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Login failed. Please check your credentials.');
+        }
+
+        const user = data.user || { name: email.split('@')[0], email };
+
+        // Save session and persistent data
+        localStorage.setItem('auraUser', JSON.stringify(user));
+        if (data.token) {
+            localStorage.setItem('auraToken', data.token);
+        }
+
+        sessionStorage.setItem('auraDemoLoggedIn', 'true');
+        sessionStorage.setItem('auraDemoEmail', user.email);
+        sessionStorage.setItem('auraDemoName', user.name);
+
+        // Update profile in localStorage for main SPA
+        try {
+            const existingProfile = JSON.parse(localStorage.getItem('aura_profile_v2') || '{}');
+            localStorage.setItem(
+                'aura_profile_v2',
+                JSON.stringify({
+                    ...existingProfile,
+                    name: user.name,
+                    email: user.email
+                })
+            );
+        } catch {
+            // Ignore storage parse error
+        }
+
+        if (loginStatus) {
+            loginStatus.style.color = '#10b981';
+            loginStatus.textContent = 'Login successful! Opening dashboard...';
+        }
+
+        setTimeout(() => {
+            window.location.href = '/pages/dashboard.html';
+        }, 600);
+    } catch (error) {
+        console.warn('Backend login error, checking fallback:', error.message);
+
+        // Fallback for offline development: if backend cannot be reached
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+            const registeredEmail = sessionStorage.getItem('auraDemoEmail');
+            const registeredName = sessionStorage.getItem('auraDemoName') || email.split('@')[0];
+
+            sessionStorage.setItem('auraDemoLoggedIn', 'true');
+            sessionStorage.setItem('auraDemoEmail', email);
+            sessionStorage.setItem('auraDemoName', registeredName);
+
+            if (loginStatus) {
+                loginStatus.style.color = '#10b981';
+                loginStatus.textContent = 'Offline demo login active! Opening dashboard...';
+            }
+
+            setTimeout(() => {
+                window.location.href = '/pages/dashboard.html';
+            }, 600);
+            return;
+        }
+
+        if (loginStatus) {
+            loginStatus.style.color = '#dc2626';
+            loginStatus.textContent = error.message;
+        }
+    } finally {
+        loginSubmit.disabled = false;
+        loginSubmit.textContent = 'Sign in';
+    }
 });
 
 guestButton.addEventListener('click', () => {
@@ -130,6 +205,6 @@ backHome.addEventListener('click', () => {
 
 forgotPassword.addEventListener('click', () => {
     alert(
-        'Password recovery will be available after backend integration.'
+        'Password recovery: Contact your system administrator or reset your password in backend settings.'
     );
 });

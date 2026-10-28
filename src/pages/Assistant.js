@@ -253,15 +253,8 @@ const SpeechRecognition =
     window.webkitSpeechRecognition;
 
 let recognition = null;
-
-if (SpeechRecognition) {
-    recognition = new SpeechRecognition();
-
-    recognition.lang = 'en-IN';
-    recognition.interimResults = false;
-    recognition.continuous = false;
-    recognition.maxAlternatives = 1;
-}
+let hasReceivedResult = false;
+let latestVoiceTranscript = '';
 
 
 /* =========================================
@@ -289,18 +282,20 @@ function setListeningUI(listening) {
 ========================================= */
 
 function startVoiceRecognition() {
-    if (!recognition) {
+    if (!SpeechRecognition) {
         assistantStatus.textContent =
-            'Voice recognition is not supported.';
+            'Voice recognition is not supported in this browser.';
 
         respond(
-            'Please use a browser that supports speech recognition, such as Google Chrome.'
+            'Please use Google Chrome or Microsoft Edge for voice recognition.'
         );
 
         return;
     }
 
-    if (isListening) {
+    if (isListening && recognition) {
+        try { recognition.stop(); } catch (e) {}
+        setListeningUI(false);
         return;
     }
 
@@ -308,95 +303,111 @@ function startVoiceRecognition() {
         window.speechSynthesis.cancel();
     }
 
-    assistantStatus.textContent =
-        'Listening... Speak now.';
-
-    setListeningUI(true);
+    hasReceivedResult = false;
+    latestVoiceTranscript = '';
 
     try {
-        recognition.start();
-    } catch (error) {
-        console.error(
-            'Could not start speech recognition:',
-            error
-        );
+        if (recognition) {
+            try { recognition.abort(); } catch (e) {}
+        }
+    } catch (e) {}
 
-        setListeningUI(false);
+    recognition = new SpeechRecognition();
+    recognition.lang = navigator.language || 'en-US';
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognition.maxAlternatives = 1;
 
-        assistantStatus.textContent =
-            'Unable to start listening. Please try again.';
-    }
-}
-
-
-/* =========================================
-   SPEECH RECOGNITION EVENTS
-========================================= */
-
-if (recognition) {
     recognition.onstart = () => {
-        assistantStatus.textContent =
-            'Listening... Speak now.';
-
+        hasReceivedResult = false;
+        latestVoiceTranscript = '';
+        assistantStatus.textContent = 'Listening... Speak now.';
         setListeningUI(true);
     };
 
     recognition.onresult = (event) => {
-        const command =
-            event.results[0][0].transcript.trim();
+        let interimTranscript = '';
+        let finalTranscript = '';
 
-        recognizedCommand.textContent = command;
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            const item = event.results[i];
+            if (item.isFinal) {
+                finalTranscript += item[0].transcript;
+            } else {
+                interimTranscript += item[0].transcript;
+            }
+        }
 
-        assistantStatus.textContent =
-            'Command received.';
+        const text = (finalTranscript || interimTranscript).trim();
+        if (text) {
+            latestVoiceTranscript = text;
+            recognizedCommand.textContent = text;
+            assistantStatus.textContent = 'Hearing: ' + text;
+        }
 
-        setListeningUI(false);
-
-        processCommand(command);
+        if (finalTranscript.trim()) {
+            hasReceivedResult = true;
+            assistantStatus.textContent = 'Command received.';
+            setListeningUI(false);
+            try { recognition.stop(); } catch (e) {}
+            processCommand(finalTranscript.trim());
+        }
     };
 
     recognition.onerror = (event) => {
-        console.error(
-            'Speech recognition error:',
-            event.error
-        );
+        console.warn('Speech recognition event:', event.error);
+
+        // If a command was already successfully captured, never overwrite it with an error
+        if (hasReceivedResult || event.error === 'aborted') {
+            return;
+        }
+
+        // If interim words were captured before no-speech, use them as the command!
+        if (latestVoiceTranscript && latestVoiceTranscript.trim()) {
+            hasReceivedResult = true;
+            setListeningUI(false);
+            assistantStatus.textContent = 'Command received.';
+            processCommand(latestVoiceTranscript.trim());
+            return;
+        }
 
         setListeningUI(false);
 
-        if (event.error === 'not-allowed') {
-            assistantStatus.textContent =
-                'Microphone access was denied.';
-
-            respond(
-                'Please allow microphone access in your browser settings and try again.'
-            );
-
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            assistantStatus.textContent = 'Microphone access was denied.';
+            respond('Please allow microphone access in your browser settings and try again.');
         } else if (event.error === 'no-speech') {
-            assistantStatus.textContent =
-                'No speech detected.';
-
-            assistantResponse.textContent =
-                'I could not hear you. Please try again.';
-
+            assistantStatus.textContent = 'Ready for your command';
+            assistantResponse.textContent = 'I didn\'t hear anything. Click Start Listening and speak your command.';
         } else {
-            assistantStatus.textContent =
-                'Unable to hear you.';
-
-            assistantResponse.textContent =
-                'Please try again.';
+            assistantStatus.textContent = 'Unable to hear you.';
+            assistantResponse.textContent = 'Please try speaking again.';
         }
     };
 
     recognition.onend = () => {
         setListeningUI(false);
 
-        if (
-            assistantStatus.textContent.startsWith('Listening')
-        ) {
-            assistantStatus.textContent =
-                'Ready for your command';
+        // If words were captured but not marked final before silence
+        if (!hasReceivedResult && latestVoiceTranscript && latestVoiceTranscript.trim()) {
+            hasReceivedResult = true;
+            assistantStatus.textContent = 'Command received.';
+            processCommand(latestVoiceTranscript.trim());
+            return;
+        }
+
+        if (assistantStatus.textContent.startsWith('Listening') || assistantStatus.textContent.startsWith('Hearing')) {
+            assistantStatus.textContent = 'Ready for your command';
         }
     };
+
+    try {
+        recognition.start();
+    } catch (error) {
+        console.error('Could not start speech recognition:', error);
+        setListeningUI(false);
+        assistantStatus.textContent = 'Unable to start listening. Please try again.';
+    }
 }
 
 

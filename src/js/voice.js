@@ -130,35 +130,65 @@ export function startListening() {
     if (isListening) return;
 
     recognition = new SpeechRecognition();
-    recognition.lang = "en-IN";
+    recognition.lang = navigator.language || "en-US";
     recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.interimResults = true;
     recognition.maxAlternatives = 1;
+
+    let hasReceivedResult = false;
+    let latestCommand = "";
 
     recognition.onstart = () => {
         isListening = true;
+        hasReceivedResult = false;
+        latestCommand = "";
         showMessage("#assistantResponse", "I'm listening. Please speak.");
     };
 
     recognition.onresult = (event) => {
-        const result = event.results[event.resultIndex];
+        let interim = "";
+        let final = "";
 
-        if (!result || !result[0]) return;
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            const item = event.results[i];
+            if (item.isFinal) {
+                final += item[0].transcript;
+            } else {
+                interim += item[0].transcript;
+            }
+        }
 
-        const command = result[0].transcript.trim();
+        const command = (final || interim).trim();
+        if (command) {
+            latestCommand = command;
+            showMessage("#userTranscript", command);
+        }
 
-        console.log("AURA heard:", command);
-        handleCommand(command);
+        if (final.trim()) {
+            hasReceivedResult = true;
+            try { recognition.stop(); } catch (e) {}
+            handleCommand(final.trim());
+        }
     };
 
     recognition.onerror = (event) => {
-        console.error("AURA speech recognition error:", event.error);
+        if (hasReceivedResult || event.error === "aborted") {
+            return;
+        }
+
+        if (latestCommand && latestCommand.trim()) {
+            hasReceivedResult = true;
+            handleCommand(latestCommand.trim());
+            return;
+        }
+
+        console.warn("AURA speech recognition error:", event.error);
 
         const messages = {
             "not-allowed":
                 "Microphone access was denied. Allow microphone access in your browser settings.",
             "no-speech":
-                "I didn't hear anything. Please try speaking again.",
+                "I didn't hear anything. Click the microphone and try speaking again.",
             "audio-capture":
                 "No microphone was detected. Check your microphone connection.",
             network:

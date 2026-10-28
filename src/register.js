@@ -54,10 +54,10 @@ app.innerHTML = `
                         <span>I agree to the AURA terms and conditions</span>
                     </label>
 
-                    <button type="submit" class="auth-submit">
+                    <button type="submit" class="auth-submit" id="registerSubmit">
                         Create account
                     </button>
-                    <p id="registerMessage" role="status" aria-live="polite"></p>
+                    <p id="registerMessage" class="auth-status" role="status" aria-live="polite"></p>
                 </form>
 
                 <p class="auth-switch">
@@ -76,7 +76,7 @@ app.innerHTML = `
 const registerForm = document.querySelector('#registerForm');
 const backHome = document.querySelector('#backHome');
 const registerMessage = document.querySelector('#registerMessage');
-const submitButton = registerForm.querySelector('button[type="submit"]');
+const submitButton = document.querySelector('#registerSubmit');
 
 registerForm.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -89,21 +89,26 @@ registerForm.addEventListener('submit', async (event) => {
 
     if (!name || !email || !password || !confirmPassword || !terms) {
         registerMessage.textContent = 'Please complete all required fields.';
+        registerMessage.style.color = '#dc2626';
         return;
     }
 
     if (password.length < 8) {
         registerMessage.textContent = 'Use a password with at least 8 characters.';
+        registerMessage.style.color = '#dc2626';
         return;
     }
 
     if (password !== confirmPassword) {
         registerMessage.textContent = 'Passwords do not match.';
+        registerMessage.style.color = '#dc2626';
         return;
     }
 
     submitButton.disabled = true;
+    submitButton.textContent = 'Creating account...';
     registerMessage.textContent = 'Creating your account...';
+    registerMessage.style.color = '#38bdf8';
 
     try {
         const response = await fetch('http://localhost:5000/api/register', {
@@ -112,23 +117,39 @@ registerForm.addEventListener('submit', async (event) => {
             body: JSON.stringify({ name, email, password })
         });
 
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
 
         if (!response.ok || !data.success) {
             throw new Error(data.message || 'Registration failed.');
         }
 
-        registerMessage.textContent =
-            'Account created. Redirecting to sign in...';
+        sessionStorage.setItem('auraDemoName', name);
+        sessionStorage.setItem('auraDemoEmail', email);
 
-        window.location.href = '/pages/login.html';
+        registerMessage.style.color = '#10b981';
+        registerMessage.textContent = 'Account created successfully! Redirecting to sign in...';
+
+        setTimeout(() => {
+            window.location.href = '/pages/login.html';
+        }, 1000);
     } catch (error) {
-        registerMessage.textContent =
-            error.message === 'Failed to fetch'
-                ? 'Cannot reach AURA backend. Please try again.'
-                : error.message;
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+            sessionStorage.setItem('auraDemoName', name);
+            sessionStorage.setItem('auraDemoEmail', email);
+            registerMessage.style.color = '#10b981';
+            registerMessage.textContent = 'Backend offline: Account saved locally! Redirecting to sign in...';
+
+            setTimeout(() => {
+                window.location.href = '/pages/login.html';
+            }, 1000);
+            return;
+        }
+
+        registerMessage.style.color = '#dc2626';
+        registerMessage.textContent = error.message;
     } finally {
         submitButton.disabled = false;
+        submitButton.textContent = 'Create account';
     }
 });
 

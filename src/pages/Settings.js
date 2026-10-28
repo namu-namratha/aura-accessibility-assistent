@@ -277,8 +277,12 @@ function readSettings() {
 
 let savedSettings = readSettings();
 
-const registeredName = sessionStorage.getItem('auraDemoName');
-const registeredEmail = sessionStorage.getItem('auraDemoEmail');
+let auraUser = null;
+try {
+    auraUser = JSON.parse(localStorage.getItem('auraUser') || 'null');
+} catch {}
+const registeredName = auraUser?.name || sessionStorage.getItem('auraDemoName');
+const registeredEmail = auraUser?.email || sessionStorage.getItem('auraDemoEmail');
 
 if (registeredName && !savedSettings.name) {
     savedSettings.name = registeredName;
@@ -374,6 +378,8 @@ function saveAllSettings() {
                 sessionStorage.setItem('auraDemoName', name);
             } else {
                 sessionStorage.removeItem('auraDemoName');
+    localStorage.removeItem('auraUser');
+    localStorage.removeItem('auraToken');
             }
 
             if (emailAddress) {

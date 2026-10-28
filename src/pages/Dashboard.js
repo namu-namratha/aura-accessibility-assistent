@@ -190,8 +190,12 @@ const dashboardWelcome = document.querySelector('#dashboardWelcome');
 const welcomeGreeting = document.querySelector('#welcomeGreeting');
 const dashboardTime = document.querySelector('#dashboardTime');
 
-const savedName = sessionStorage.getItem('auraDemoName');
-const savedEmail = sessionStorage.getItem('auraDemoEmail');
+let auraUser = null;
+try {
+    auraUser = JSON.parse(localStorage.getItem('auraUser') || 'null');
+} catch {}
+const savedName = auraUser?.name || sessionStorage.getItem('auraDemoName');
+const savedEmail = auraUser?.email || sessionStorage.getItem('auraDemoEmail');
 const displayName = savedName || (savedEmail ? savedEmail.split('@')[0] : '');
 
 if (displayName) {
@@ -321,38 +325,71 @@ function startVoiceAssistant() {
     }
 
     recognition = new SpeechRecognition();
-    recognition.lang = 'en-IN';
-    recognition.interimResults = false;
+    recognition.lang = navigator.language || 'en-US';
+    recognition.interimResults = true;
     recognition.continuous = false;
     recognition.maxAlternatives = 1;
 
+    let hasReceivedResult = false;
+    let latestCommand = '';
+
     recognition.onstart = () => {
         isListening = true;
+        hasReceivedResult = false;
+        latestCommand = '';
         activateAssistant.textContent = '🔴 Listening...';
         assistantStatus.textContent = 'Listening. Speak your command.';
         assistantStatus.classList.add('assistant-listening');
     };
 
     recognition.onresult = event => {
-        const command = event.results?.[0]?.[0]?.transcript?.trim();
+        let interim = '';
+        let final = '';
 
-        if (!command) {
-            assistantStatus.textContent = 'I did not catch that. Please try again.';
-            return;
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            const item = event.results[i];
+            if (item.isFinal) {
+                final += item[0].transcript;
+            } else {
+                interim += item[0].transcript;
+            }
         }
 
-        assistantStatus.textContent = `You said: "${command}"`;
-        handleVoiceCommand(command);
+        const command = (final || interim).trim();
+        if (command) {
+            latestCommand = command;
+            assistantStatus.textContent = `Hearing: "${command}"`;
+        }
+
+        if (final.trim()) {
+            hasReceivedResult = true;
+            assistantStatus.textContent = `You said: "${final.trim()}"`;
+            try { recognition.stop(); } catch (e) {}
+            handleVoiceCommand(final.trim());
+        }
     };
 
     recognition.onerror = event => {
-        console.error('Speech recognition error:', event.error);
+        if (hasReceivedResult || event.error === 'aborted') {
+            resetListeningUI();
+            return;
+        }
+
+        if (latestCommand && latestCommand.trim()) {
+            hasReceivedResult = true;
+            assistantStatus.textContent = `You said: "${latestCommand.trim()}"`;
+            resetListeningUI();
+            handleVoiceCommand(latestCommand.trim());
+            return;
+        }
+
+        console.warn('Speech recognition error:', event.error);
 
         assistantStatus.textContent =
             event.error === 'not-allowed' || event.error === 'service-not-allowed'
                 ? 'Microphone access was denied. Allow microphone access and try again.'
                 : event.error === 'no-speech'
-                    ? 'I did not hear anything. Please try again.'
+                    ? 'Ready. Click activate to speak your command.'
                     : 'I could not hear that clearly. Please try again.';
 
         resetListeningUI();
@@ -557,6 +594,8 @@ dashboardLogout.addEventListener('click', () => {
     sessionStorage.removeItem('auraDemoLoggedIn');
     sessionStorage.removeItem('auraDemoEmail');
     sessionStorage.removeItem('auraDemoName');
+    localStorage.removeItem('auraUser');
+    localStorage.removeItem('auraToken');
 
     window.location.href = '/pages/login.html';
 });
