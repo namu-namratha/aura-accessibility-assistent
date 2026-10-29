@@ -11,6 +11,8 @@ import fs from "node:fs";
 // Load environment variables from backend/.env or root .env
 dotenv.config({ path: path.resolve(import.meta.dirname, ".env") });
 dotenv.config();
+console.log("Gemini API key loaded:", Boolean(process.env.GEMINI_API_KEY));
+console.log("Gemini model:", process.env.GEMINI_MODEL || "gemini-2.5-flash");
 
 const app = express();
 const PORT = Number(process.env.PORT || 5000);
@@ -118,7 +120,7 @@ app.get("/api/health", async (req, res) => {
     success: true,
     project: "AURA",
     status: "online",
-    aiConfigured: Boolean(openai),
+    aiConfigured: Boolean(process.env.GEMINI_API_KEY),
     database,
     storage: dbConnected ? "mysql" : "local_fallback"
   });
