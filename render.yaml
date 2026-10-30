@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: aura-accessibility-assistant
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        sync: false        # set this in Render dashboard
+      - key: GEMINI_API_KEY
+        sync: false        # set this in Render dashboard
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: YOUTUBE_API_KEY
+        sync: false        # set this in Render dashboard
+      # Database (optional — app falls back to local JSON if not set)
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false

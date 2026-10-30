@@ -486,7 +486,7 @@ function renderSmartAutomation() {
         <section class="page-intro">
             <span class="eyebrow">YOUR PERSONAL WEB ASSISTANT</span>
             <h1>Smart Automation</h1>
-            <p>Tell AURA which website you want to open.</p>
+            <p>Search Google, YouTube, or GitHub, open a website, or find a song.</p>
         </section>
 
         <section class="panel" style="padding: 24px;">
@@ -500,7 +500,7 @@ function renderSmartAutomation() {
                 <input
                     id="automationCommand"
                     type="text"
-                    placeholder="Example: Open YouTube"
+                    placeholder="Example: Search for cats on YouTube"
                     autocomplete="off"
                     required
                     style="
@@ -620,30 +620,162 @@ function attachSmartAutomationEvents() {
     }
 
     function runCommand(command) {
-        const text = command.toLowerCase().trim();
+        const commandText = command.trim();
+        const text = commandText.toLowerCase();
 
         if (!text) {
             status.textContent = "Please enter or speak a command.";
             return;
         }
 
-        const siteAliases = [
-            ["chatgpt", /\bchat\s*gpt\b|\bchatgpt\b/],
-            ["youtube", /\byou\s*tube\b|\byoutube\b/],
-            ["whatsapp", /\bwhats\s*app\b|\bwhatsapp\b/],
-            ["github", /\bgithub\b|\bgit\s*hub\b/],
-            ["google", /\bgoogle\b/]
-        ];
-
-        const matchedSite = siteAliases.find(([, pattern]) =>
-            pattern.test(text)
+        const siteSearchCommand = commandText.match(
+            /^(?:please\s+)?(?:(?:open|go to)\s+)?(google|you\s*tube|git\s*hub)\s+(?:and\s+)?(?:search(?:\s+for)?|find)\s+(.+)$/i
+        );
+        const searchCommand = commandText.match(
+            /^(?:please\s+)?(?:(?:can you|could you|i want to)\s+)?(?:search(?:\s+for)?|find|look\s+up)(?:\s+(.+))?$/i
+        );
+        const openAndSearchCommand = commandText.match(
+            /^(?:please\s+)?(?:open|go to)\s+(google|you\s*tube|git\s*hub)\s+and\s+(?:search(?:\s+for)?|find)\s+(.+)$/i
         );
 
-        if (matchedSite) {
-            openWebsite(matchedSite[0]);
+        if (searchCommand || openAndSearchCommand || siteSearchCommand) {
+            let query = (
+                searchCommand?.[1] ||
+                openAndSearchCommand?.[2] ||
+                siteSearchCommand?.[2] ||
+                ""
+            )
+                .replace(/[.!?]+$/, "")
+                .trim();
+            let provider = (
+                openAndSearchCommand?.[1] ||
+                siteSearchCommand?.[1] ||
+                "google"
+            ).replace(/\s+/g, "").toLowerCase();
+
+            const trailingProvider = query.match(
+                /\s+(?:(?:on|in|using)\s+)?(google|you\s*tube|git\s*hub|whats\s*app|chat\s*gpt)\s*$/i
+            );
+            const leadingProvider = query.match(
+                /^(google|you\s*tube|git\s*hub)\s+(?:for\s+)?(.+)$/i
+            );
+
+            if (trailingProvider) {
+                provider = trailingProvider[1].replace(/\s+/g, "").toLowerCase();
+                query = query.slice(0, trailingProvider.index).trim();
+            } else if (leadingProvider) {
+                provider = leadingProvider[1].replace(/\s+/g, "").toLowerCase();
+                query = leadingProvider[2].trim();
+            }
+
+            if (!query) {
+                status.textContent =
+                    'What would you like to search for? Try "Search for cats on YouTube".';
+                return;
+            }
+
+            const searchUrls = {
+                google: new URL("https://www.google.com/search"),
+                youtube: new URL("https://www.youtube.com/results"),
+                github: new URL("https://github.com/search")
+            };
+            const searchUrl = searchUrls[provider];
+
+            if (!searchUrl) {
+                status.textContent =
+                    "Search commands currently support Google, YouTube, and GitHub.";
+                return;
+            }
+
+            searchUrl.searchParams.set(
+                provider === "youtube" ? "search_query" : "q",
+                query
+            );
+
+            const newTab = window.open(searchUrl.toString(), "_blank");
+
+            if (newTab) {
+                try {
+                    newTab.opener = null;
+                } catch (error) {
+                    console.warn("Could not clear the new tab's opener.", error);
+                }
+
+                status.textContent =
+                    `Searching ${provider === "youtube" ? "YouTube" : provider === "github" ? "GitHub" : "Google"} for "${query}".`;
+            } else {
+                status.textContent =
+                    "The browser blocked the search tab. Opening the results in this tab.";
+                window.location.assign(searchUrl.toString());
+            }
+            return;
+        }
+
+        const songCommand = commandText.match(
+            /^(?:please\s+)?(?:play|listen\s+to|put\s+on)\s+(.+)$/i
+        );
+
+        if (songCommand) {
+            const song = songCommand[1]
+                .replace(
+                    /^(?:(?:a|the)\s+)?(?:song|track|music)(?:\s+(?:of|called|named|titled))?\s+/i,
+                    ""
+                )
+                .replace(/^(?:called|named|titled)\s+/i, "")
+                .replace(/[.!?]+$/, "")
+                .trim();
+
+            if (!song || /^(?:(?:a|the)\s+)?(?:song|track|music)$/i.test(song)) {
+                status.textContent =
+                    'Please include a song name, for example: "Play a song of Imagine".';
+                return;
+            }
+
+            const searchUrl = new URL("https://music.youtube.com/search");
+            searchUrl.searchParams.set("q", song);
+            const newTab = window.open(searchUrl.toString(), "_blank");
+
+            if (newTab) {
+                try {
+                    newTab.opener = null;
+                } catch (error) {
+                    console.warn("Could not clear the new tab's opener.", error);
+                }
+
+                status.textContent =
+                    `Opening YouTube Music results for "${song}".`;
+            } else {
+                status.textContent =
+                    "The browser blocked the new tab. Allow pop-ups for AURA and try again.";
+            }
+            return;
+        }
+
+        const openSiteCommand = commandText.match(
+            /^(?:please\s+)?(?:(?:open|go to|launch|visit)\s+)?(google|you\s*tube|whats\s*app|git\s*hub|chat\s*gpt)\s*$/i
+        );
+
+        if (openSiteCommand) {
+            openWebsite(openSiteCommand[1].replace(/\s+/g, "").toLowerCase());
+            return;
+        }
+
+        const searchUrl = new URL("https://www.google.com/search");
+        searchUrl.searchParams.set("q", commandText);
+        const newTab = window.open(searchUrl.toString(), "_blank");
+
+        if (newTab) {
+            try {
+                newTab.opener = null;
+            } catch (error) {
+                console.warn("Could not clear the new tab's opener.", error);
+            }
+
+            status.textContent = `Searching Google for "${commandText}".`;
         } else {
             status.textContent =
-                "I couldn't recognise that website. Try: Open YouTube, Open Google, or Open GitHub.";
+                "The browser blocked the search tab. Opening the results in this tab.";
+            window.location.assign(searchUrl.toString());
         }
     }
 
@@ -701,7 +833,7 @@ function attachSmartAutomationEvents() {
         listening = true;
         voiceButton.textContent = "🔴 Listening...";
         status.textContent =
-            "AURA is listening. Say: Open YouTube, Open Google, Open WhatsApp, Open GitHub, or Open ChatGPT.";
+            'AURA is listening. Say: "Search for cats on YouTube", "Search for accessibility on Google", "Search GitHub for Vite", or "Open YouTube".';
     };
 
     recognition.onresult = function (event) {
@@ -1605,13 +1737,16 @@ async function sendChatMessage(message) {
         const thinking = document.getElementById("auraThinking");
         if (thinking) thinking.remove();
 
+        console.error("AURA chat error:", error);
+        console.error("Error name:", error.name);
+        console.error("Error message:", error.message);
+
         appendChatMessage(
-            "I'm having trouble connecting to my AI service. Please check that the AURA backend is running and try again.",
+            `AURA connection error: ${error.message || "Unknown error"}. Check the browser console for details.`,
             "assistant"
         );
 
-        console.error("AURA chat error:", error);
-        showToast("Could not connect to AURA's AI service.");
+        showToast(`AURA error: ${error.message || "Unknown error"}`);
     }
 }
 
@@ -1648,7 +1783,6 @@ function attachChatEvents() {
         showToast("Conversation cleared.");
     });
 }
-
 /* =========================================
    BROWSER SPEECH SYNTHESIS
 ========================================= */

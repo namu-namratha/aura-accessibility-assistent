@@ -1,0 +1,452 @@
+/* ═══════════════════════════════════════════════════════════════
+   AURA – YouTube Search page styles
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Page Layout ─────────────────────────────────────────────── */
+.yt-page {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ── Search Card ─────────────────────────────────────────────── */
+.yt-search-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px 36px;
+    margin-bottom: 28px;
+}
+
+.yt-search-card h2 {
+    margin-bottom: 4px;
+    font-size: 1.55rem;
+}
+
+.yt-search-card p {
+    font-size: 0.85rem;
+    margin-bottom: 20px;
+}
+
+/* ── Input Row ───────────────────────────────────────────────── */
+.yt-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.yt-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 50px;
+    padding: 6px 6px 6px 18px;
+    transition: border-color 0.2s;
+}
+
+.yt-input-wrap:focus-within {
+    border-color: var(--purple);
+    box-shadow: 0 0 0 3px rgb(155 123 255 / 18%);
+}
+
+.yt-input-icon {
+    color: var(--red);
+    font-size: 1.1rem;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.yt-input-wrap input[type="search"] {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 1rem;
+    padding: 6px 4px;
+    min-width: 0;
+}
+
+.yt-input-wrap input[type="search"]::placeholder {
+    color: var(--subtle);
+}
+
+.yt-input-wrap input[type="search"]::-webkit-search-cancel-button {
+    cursor: pointer;
+}
+
+.yt-search-btn {
+    background: linear-gradient(135deg, #9b7bff, #7051df);
+    color: #fff;
+    border: none;
+    border-radius: 44px;
+    padding: 10px 24px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.18s, transform 0.12s;
+    white-space: nowrap;
+}
+
+.yt-search-btn:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+}
+
+.yt-search-btn:active {
+    transform: translateY(0);
+}
+
+/* ── Validation & Spell ─────────────────────────────────────── */
+.yt-input-error {
+    color: var(--red);
+    font-size: 0.84rem;
+    min-height: 1.2em;
+    padding-left: 18px;
+}
+
+.yt-spell-suggest {
+    color: var(--muted);
+    font-size: 0.87rem;
+    padding-left: 18px;
+    min-height: 1.2em;
+}
+
+.yt-did-you-mean {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--blue);
+    font-size: inherit;
+    cursor: pointer;
+    font-style: italic;
+    text-decoration: underline;
+}
+
+.yt-did-you-mean:hover {
+    color: var(--purple-light);
+}
+
+/* ── Spinner ─────────────────────────────────────────────────── */
+.yt-spinner-wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 32px 0 16px;
+    justify-content: center;
+    color: var(--muted);
+}
+
+.yt-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--purple);
+    border-radius: 50%;
+    animation: yt-spin 0.75s linear infinite;
+}
+
+@keyframes yt-spin {
+    to { transform: rotate(360deg); }
+}
+
+body.reduce-motion .yt-spinner {
+    animation: none;
+    border-top-color: var(--purple);
+}
+
+/* ── Error Banner ────────────────────────────────────────────── */
+.yt-error-banner {
+    background: rgb(255 126 139 / 10%);
+    border: 1px solid var(--red);
+    border-radius: 14px;
+    padding: 18px 22px;
+    color: var(--red);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 18px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.yt-error-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+/* ── Results Section ─────────────────────────────────────────── */
+.yt-results-section {
+    outline: none;
+}
+
+.yt-results-meta {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.yt-results-meta h2 {
+    margin-bottom: 0;
+}
+
+/* ── Keywords ────────────────────────────────────────────────── */
+.yt-keywords-wrap {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+    align-self: flex-end;
+}
+
+.yt-keywords-label {
+    color: var(--subtle);
+    font-size: 0.78rem;
+    white-space: nowrap;
+}
+
+.yt-keyword-badge {
+    background: rgb(155 123 255 / 14%);
+    color: var(--purple-light);
+    border-radius: 50px;
+    padding: 3px 11px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    border: 1px solid rgb(155 123 255 / 25%);
+}
+
+/* ── Video Grid ──────────────────────────────────────────────── */
+.yt-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 32px;
+}
+
+/* ── Video Card ──────────────────────────────────────────────── */
+.yt-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
+}
+
+.yt-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--purple);
+    box-shadow: 0 8px 32px rgb(155 123 255 / 18%);
+}
+
+.yt-card-link {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    height: 100%;
+}
+
+.yt-card-thumb-wrap {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: var(--bg);
+    overflow: hidden;
+}
+
+.yt-card-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.22s;
+    display: block;
+}
+
+.yt-card:hover .yt-card-thumb {
+    transform: scale(1.04);
+}
+
+.yt-card-play {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: #fff;
+    background: rgb(0 0 0 / 35%);
+    opacity: 0;
+    transition: opacity 0.18s;
+}
+
+.yt-card:hover .yt-card-play,
+.yt-card-link:focus .yt-card-play {
+    opacity: 1;
+}
+
+.yt-card-body {
+    padding: 16px 18px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    flex: 1;
+}
+
+.yt-card-title {
+    font-size: 0.97rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.yt-card-meta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 0.78rem;
+    color: var(--subtle);
+}
+
+.yt-card-channel {
+    color: var(--muted);
+}
+
+.yt-card-date {
+    color: var(--subtle);
+}
+
+.yt-card-desc {
+    font-size: 0.81rem;
+    color: var(--subtle);
+    margin: 0;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.yt-card-watch-link {
+    font-size: 0.8rem;
+    color: var(--purple);
+    font-weight: 500;
+    margin-top: auto;
+    padding-top: 4px;
+}
+
+.yt-card:hover .yt-card-watch-link {
+    color: var(--purple-light);
+}
+
+/* ── Related Searches ────────────────────────────────────────── */
+.yt-related-wrap {
+    margin-top: 10px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+}
+
+.yt-related-wrap .dashboard-label {
+    display: block;
+    margin-bottom: 12px;
+}
+
+.yt-related-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.yt-related-pill {
+    background: var(--panel-hover);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    padding: 8px 18px;
+    font-size: 0.87rem;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.yt-related-pill:hover {
+    background: rgb(155 123 255 / 14%);
+    border-color: var(--purple);
+    color: var(--purple-light);
+}
+
+/* ── Empty State ─────────────────────────────────────────────── */
+.yt-empty {
+    text-align: center;
+    padding: 64px 32px;
+    color: var(--muted);
+}
+
+.yt-empty-icon {
+    font-size: 3.5rem;
+    margin-bottom: 18px;
+}
+
+.yt-empty h3 {
+    font-size: 1.3rem;
+    color: var(--text);
+    margin-bottom: 8px;
+}
+
+.yt-empty p {
+    font-size: 0.95rem;
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .yt-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .yt-search-card {
+        padding: 22px 18px;
+    }
+
+    .yt-input-wrap {
+        flex-wrap: wrap;
+        border-radius: 16px;
+        padding: 10px 14px;
+    }
+
+    .yt-search-btn {
+        width: 100%;
+        border-radius: 12px;
+        padding: 12px;
+        margin-top: 6px;
+    }
+
+    .yt-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .yt-results-meta {
+        flex-direction: column;
+    }
+}
+
+/* ── High contrast overrides ─────────────────────────────────── */
+body.high-contrast .yt-card {
+    border-color: #fff;
+}
+
+body.high-contrast .yt-search-btn {
+    background: #fff;
+    color: #000;
+}
+
+body.high-contrast .yt-related-pill {
+    border-color: #fff;
+}

@@ -20,6 +20,7 @@ app.innerHTML = `
                 <a href="#assistant" id="navAssistant"><span>◉</span> Voice Assistant</a>
                 <a href="/pages/accessibility.html"><span>♿</span> Accessibility</a>
                 <a href="#activity"><span>◷</span> Activity</a>
+                <a href="/pages/youtube.html"><span>▶</span> YouTube Search</a>
                 <a href="/pages/settings.html"><span>⚙</span> Settings</a>
             </nav>
 

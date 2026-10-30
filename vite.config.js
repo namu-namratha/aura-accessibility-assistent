@@ -4,7 +4,14 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   server: {
     port: 3000,
-    strictPort: true
+    strictPort: true,
+    // Proxy API calls to Express backend during development
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true
+      }
+    }
   },
   build: {
     rollupOptions: {
@@ -15,7 +22,8 @@ export default defineConfig({
         dashboard: resolve(import.meta.dirname, 'pages/dashboard.html'),
         login: resolve(import.meta.dirname, 'pages/login.html'),
         register: resolve(import.meta.dirname, 'pages/register.html'),
-        settings: resolve(import.meta.dirname, 'pages/settings.html')
+        settings: resolve(import.meta.dirname, 'pages/settings.html'),
+        youtube: resolve(import.meta.dirname, 'pages/youtube.html')
       }
     }
   }
