@@ -1448,40 +1448,45 @@ function renderSettings() {
             </div>
 
             <div class="panel settings-panel">
-                <div class="settings-panel-heading">
-                    <div class="feature-icon blue">◉</div>
+    <div class="settings-panel-heading">
+        <div class="feature-icon blue">◉</div>
 
-                    <div>
-                        <h3>Application information</h3>
-                        <p>Current demonstration configuration.</p>
-                    </div>
-                </div>
+        <div>
+            <h3>Application information</h3>
+            <p>Live application configuration.</p>
+        </div>
+    </div>
 
-                <div class="info-row">
-                    <span>Application</span>
-                    <strong>AURA 2.0</strong>
-                </div>
+    <div class="info-row">
+        <span>Application</span>
+        <strong>AURA 2.0</strong>
+    </div>
 
-                <div class="info-row">
-                    <span>Interface</span>
-                    <strong>Vite + JavaScript</strong>
-                </div>
+    <div class="info-row">
+        <span>Interface</span>
+        <strong>Vite + JavaScript</strong>
+    </div>
 
-                <div class="info-row">
-                    <span>Profile storage</span>
-                    <strong>Browser local storage</strong>
-                </div>
+    <div class="info-row">
+        <span>Profile storage</span>
+        <strong id="settingsStorageStatus">Checking...</strong>
+    </div>
 
-                <div class="info-row">
-                    <span>Live AI connection</span>
-                    <strong class="warning-text">Not connected</strong>
-                </div>
+    <div class="info-row">
+        <span>Gemini API configuration</span>
+        <strong id="settingsAiStatus">Checking...</strong>
+    </div>
 
-                <div class="info-row">
-                    <span>MySQL database</span>
-                    <strong class="warning-text">Not connected</strong>
-                </div>
-            </div>
+    <div class="info-row">
+        <span>MySQL database</span>
+        <strong id="settingsDatabaseStatus">Checking...</strong>
+    </div>
+
+    <div class="info-row">
+        <span>Backend server</span>
+        <strong id="settingsBackendStatus">Checking...</strong>
+    </div>
+</div>
 
             <div class="panel settings-panel">
                 <div class="settings-panel-heading">
